@@ -7,7 +7,7 @@ Use esta alternativa quando o comando privado não aparecer no seletor do editor
 3. Nas propriedades do **novo projeto**, copie SPREADSHEET_ID e ADMIN_EMAILS do projeto do site. Se SOURCE_SHEET ou INSTITUTIONAL_DOMAIN tiverem valores personalizados, copie também. Propriedades não são compartilhadas entre projetos.
 4. Salve e selecione prepararPlanilha (sem sublinhado). Execute e autorize com uma conta de ADMIN_EMAILS que tenha edição na planilha.
 5. O comando verifica os cabeçalhos de origem e prepara USUARIOS, AUDITORIA e GESTAO_SOLICITACOES sem apagar respostas ou usuários. A coluna `QUANTIDADE_MINUTAS` registra a quantidade operacional de cada solicitação; ela não substitui a capacidade mensal informada no cadastro do juiz.
-6. Se existir a aba `Juízes Leigos Disponíveis`, o comando alinha somente sua linha de cabeçalho à ordem retornada pela fórmula `FILTER` (A:R). A fórmula e as respostas originais permanecem intactas.
+6. Se existir a aba `Juízes Leigos Disponíveis`, o comando alinha somente sua linha de cabeçalho à ordem retornada pela fórmula `FILTER` (A:R). Se a cópia possuir uma tabela nativa com uma coluna excedente, essa coluna final recebe `COLUNA_AUXILIAR_LEGADA`, pois tabelas não aceitam cabeçalho vazio. A fórmula e as respostas originais permanecem intactas.
 7. Volte ao projeto do site para publicar sua versão atualizada. Esta ferramenta não verifica a implantação nem resolve uma eventual identidade vazia no login do site.
 
 Esta separação permite usar a identidade executora para manutenção sem disponibilizar uma função com os privilégios do proprietário aos visitantes do Web App. Não renomeie o comando privado do projeto do site para torná-lo público.
