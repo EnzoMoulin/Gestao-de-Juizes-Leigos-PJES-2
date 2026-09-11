@@ -24,6 +24,10 @@ function valor_(linha, mapa, chave) {
   return linha[mapa[JL_CONFIG.HEADERS[chave]]];
 }
 
+function campoPreenchido_(valor) {
+  return String(valor == null ? "" : valor).trim() !== "";
+}
+
 function ehSolicitacao_(linha, mapa) {
   const cargo = normalizarNome_(valor_(linha, mapa, "FUNCTION"));
   return cargo.includes("magistrad") || cargo.includes("assessor");
@@ -48,18 +52,21 @@ function solicitacaoDaLinha_(linhaExibida, linhaBruta, mapa, numeroLinha, metada
   const criadoEm = valor_(linhaBruta, mapa, "TIMESTAMP");
   const gestao = metadados[numeroLinha] || { prioridade: "Normal", prazo: "", atualizadoEm: "", atualizadoPor: "" };
   const hoje = dataIso_(new Date());
+  const quantidade = valor_(linhaExibida, mapa, "CAPACITY");
+  const quantidadeNumerica = numeroQuantidade_(quantidade);
   return {
     id: numeroLinha,
     versao: versaoSolicitacao_(linhaBruta, numeroLinha, metadados, linhaExibida),
-    quantidadeValida: quantidadeInteira_(valor_(linhaExibida, mapa, "CAPACITY")) > 0,
+    quantidadeInformada: campoPreenchido_(quantidade),
+    quantidadeValida: quantidadeInteira_(quantidade) > 0,
     data: valor_(linhaExibida, mapa, "TIMESTAMP"),
     dataIso: criadoEm instanceof Date ? criadoEm.toISOString() : "",
     diasEspera: diasDesde_(criadoEm),
     solicitante: valor_(linhaExibida, mapa, "NAME"),
     email: normalizarEmail_(valor_(linhaExibida, mapa, "EMAIL")),
     unidade: valor_(linhaExibida, mapa, "UNIT"),
-    quantidade: valor_(linhaExibida, mapa, "CAPACITY"),
-    quantidadeNumerica: numeroQuantidade_(valor_(linhaExibida, mapa, "CAPACITY")),
+    quantidade: quantidade,
+    quantidadeNumerica: quantidadeNumerica,
     competencias: valor_(linhaExibida, mapa, "SKILLS") || valor_(linhaExibida, mapa, "SUBJECTS"),
     preferencia: valor_(linhaExibida, mapa, "PREFERRED_JUDGE"),
     status: status,
@@ -124,10 +131,18 @@ function listarDados_(usuario) {
   juizes.forEach(juiz => {
     const chave = normalizarNome_(juiz.nome);
     const atribuidas = todasSolicitacoes.filter(item => !statusFinal_(item.status) && normalizarNome_(item.juiz) === chave);
+    const quantidadesAusentes = atribuidas.filter(item => !item.quantidadeInformada);
+    const quantidadesInvalidas = atribuidas.filter(item => item.quantidadeInformada && !item.quantidadeValida);
     juiz.designadas = atribuidas.reduce((total, item) => total + item.quantidadeNumerica, 0);
-    juiz.cargaConfiavel = !atribuidas.some(item => !item.quantidadeValida);
+    juiz.cargaConfiavel = quantidadesAusentes.length === 0 && quantidadesInvalidas.length === 0;
+    juiz.cargaParcial = quantidadesAusentes.length > 0;
+    juiz.quantidadesAtribuidasAusentes = quantidadesAusentes.map(item => item.id);
+    juiz.quantidadesAtribuidasInvalidas = quantidadesInvalidas.map(item => item.id);
     juiz.nomeDuplicado = juizes.filter(item => normalizarNome_(item.nome) === chave).length > 1;
-    juiz.requerRevisao = !juiz.capacidadeValida || !juiz.statusValido || !juiz.cargaConfiavel || juiz.nomeDuplicado;
+    // Uma solicitação antiga pode não ter informado a quantidade de minutas.
+    // Isso deixa a carga parcial, mas não invalida a capacidade declarada do juiz.
+    // Valores preenchidos e inválidos continuam exigindo correção da origem.
+    juiz.requerRevisao = !juiz.capacidadeValida || !juiz.statusValido || quantidadesInvalidas.length > 0 || juiz.nomeDuplicado;
     juiz.disponiveis = !juiz.requerRevisao ? Math.max(juiz.capacidadeNumerica - juiz.designadas, 0) : null;
     juiz.percentualOcupacao = juiz.capacidadeNumerica > 0 ? Math.min(100, Math.round(juiz.designadas / juiz.capacidadeNumerica * 100)) : 0;
     juiz.lotado = juiz.capacidadeValida && juiz.designadas >= juiz.capacidadeNumerica;

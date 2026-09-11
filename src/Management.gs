@@ -40,8 +40,11 @@ function validarCapacidadeDesignacao_(dados, linha, nome, quantidade, justificat
   if (quantidade === null || quantidade <= 0) throw new Error("Corrija a quantidade da solicitação na origem: informe um inteiro positivo de minutas.");
   if (!juiz.capacidadeValida || !juiz.statusValido) throw new Error("A capacidade ou o status do juiz precisa de revisão na origem antes da designação.");
   const outras = dados.todasSolicitacoes.filter(item => item.id !== linha && !statusFinal_(item.status) && normalizarNome_(item.juiz) === chave);
-  if (outras.some(item => !item.quantidadeValida)) throw new Error("Há solicitações ativas deste juiz com quantidade inválida. Corrija a origem antes de calcular a carga.");
-  const projetada = outras.reduce((total, item) => total + item.quantidadeNumerica, 0) + quantidade;
+  const invalidas = outras.filter(item => item.quantidadeInformada && !item.quantidadeValida);
+  if (invalidas.length) throw new Error("Há solicitações ativas deste juiz com quantidade inválida. Corrija a origem antes de calcular a carga.");
+  // Campos vazios em solicitações antigas não contam como carga conhecida.
+  // A quantidade da nova solicitação continua obrigatória e positiva.
+  const projetada = outras.reduce((total, item) => total + (item.quantidadeValida ? item.quantidadeNumerica : 0), 0) + quantidade;
   const excede = projetada > juiz.capacidadeNumerica;
   const motivo = String(justificativa || "").trim();
   if (motivo.length > 500) throw new Error("A justificativa deve ter no máximo 500 caracteres.");

@@ -110,7 +110,7 @@ Após esta atualização, uma nova autorização será solicitada porque o aplic
 ## Observações
 
 - A capacidade é calculada usando a quantidade de minutas das solicitações ativas designadas pelo nome do juiz.
-- Quantidades exigem inteiro positivo; capacidade aceita inteiro não negativo. Aceitam-se agrupamento brasileiro e sufixo “minutas”; valores ambíguos exigem correção na origem. Cadastros com capacidade/carga inválida ficam fora do indicador de disponíveis.
+- A capacidade declarada do juiz aceita inteiro não negativo. Em solicitações, quantidades informadas devem ser inteiros positivos; solicitações antigas sem quantidade não reduzem a carga conhecida, aparecem como carga parcial e não invalidam a capacidade do juiz. Valores preenchidos de forma ambígua exigem correção na origem.
 - Designações acima da capacidade continuam possíveis, mas exigem confirmação e justificativa.
 - Notificações são enviadas apenas para endereços do domínio institucional.
 - O sistema espera os 17 cabeçalhos originais da planilha fornecida.
