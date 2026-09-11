@@ -3,14 +3,14 @@
 Data: 11 de setembro de 2026  
 Projeto: PJES — Gestão de Juízes Leigos  
 Base examinada: `072ca67fd793f0a742da49656931d9c1df8190c1`, ramo `main`  
-Repositório: https://github.com/actualrat1984/Gestao-de-Juizes-Leigos-PJES  
+Repositório: https://github.com/EnzoMoulin/Gestao-de-Juizes-Leigos-PJES-2
 Versão candidata: `2026.09.11-quantidade-operacional` — ramo local `feat/auditoria-ui-conecta-jules`
 
 ## Resultado
 
 A revisão confirmou riscos no controle de edições simultâneas, no tratamento de quantidades e na reabertura de solicitações. A versão candidata corrige esses caminhos e acrescenta recursos para localizar, revisar e imprimir a fila de trabalho. As cinco suítes locais passaram; duas delas abrangem 31 cenários de integridade e interface.
 
-**A candidata está preparada para revisão e homologação. Não foi aplicada ao GitHub remoto, ao Apps Script ou à planilha de produção.** A conexão GitHub informou `pull: true` e `push: false`; por isso, as alterações são entregues como pacote e patch. A validação visual não foi concluída: o navegador de revisão bloqueou a abertura da prévia pela política de URLs. O teste de interface usou DOM simulado e não comprova aparência ou acessibilidade integral.
+**A candidata está preparada para revisão e homologação e foi publicada no GitHub. Ela ainda não foi aplicada ao Apps Script nem à planilha de produção.** A validação visual não foi concluída: o navegador de revisão bloqueou a abertura da prévia pela política de URLs. O teste de interface usou DOM simulado e não comprova aparência ou acessibilidade integral.
 
 Permanecem riscos de associação por linha/nome e gravação parcial entre abas. Eles precisam de tratamento antes de uma expansão de uso institucional. Esta auditoria é técnica e não constitui homologação administrativa, parecer jurídico ou certificação de segurança.
 
