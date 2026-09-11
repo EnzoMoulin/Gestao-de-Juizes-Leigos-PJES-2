@@ -93,7 +93,14 @@ function prepararPlanilha() {
   const visao = planilha.getSheetByName("Juízes Leigos Disponíveis");
   if (visao && fonte.getLastColumn() >= 18) {
     const cabecalhosVisao = fonte.getRange(1, 1, 1, 18).getDisplayValues()[0];
-    visao.getRange(1, 1, 1, 19).setValues([cabecalhosVisao.concat([""])]);
+    // Algumas cópias importadas têm uma tabela nativa com 19 colunas, embora
+    // a fórmula FILTER retorne somente A:R. Tabelas do Sheets não aceitam
+    // cabeçalho vazio; mantenha eventual coluna excedente no fim com um nome
+    // neutro, sem deslocar os cabeçalhos que correspondem à fórmula.
+    // Use getMaxColumns() instead of getLastColumn(): after a failed attempt
+    // the table may still occupy S even though S1 is now blank.
+    if (visao.getMaxColumns() < 19) visao.insertColumnsAfter(visao.getMaxColumns(), 19 - visao.getMaxColumns());
+    visao.getRange(1, 1, 1, 19).setValues([cabecalhosVisao.concat(["COLUNA_AUXILIAR_LEGADA"])]);
     visao.setFrozenRows(1);
   }
   SpreadsheetApp.flush();
