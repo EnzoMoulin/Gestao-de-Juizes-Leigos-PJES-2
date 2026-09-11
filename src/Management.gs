@@ -17,12 +17,19 @@ function quantidadeInteira_(valor) {
   return Number.isSafeInteger(numero) ? numero : null;
 }
 
+function quantidadeSolicitacao_(valor) {
+  const quantidade = quantidadeInteira_(valor);
+  return quantidade !== null && quantidade > 0 ? quantidade : null;
+}
+
 // Comparação dentro do bloqueio de escrita, sem migração das abas existentes.
 function versaoSolicitacao_(linha, numeroLinha, metadados, linhaExibida) {
-  const gestao = metadados[numeroLinha] || {};
+  const metadadosSeguros = metadados || {};
+  const gestao = metadadosSeguros[numeroLinha] || {};
   return hashToken_(JSON.stringify({ linha: linha, exibicao: linhaExibida, origem: numeroLinha,
     prioridade: gestao.prioridade || "Normal", prazo: gestao.prazo || "",
-    atualizadoEm: gestao.atualizadoEm || "", atualizadoPor: gestao.atualizadoPor || "" }));
+    atualizadoEm: gestao.atualizadoEm || "", atualizadoPor: gestao.atualizadoPor || "",
+    quantidade: gestao.quantidadeConfigurada ? gestao.quantidade : "" }));
 }
 
 function exigirVersaoSolicitacao_(versaoEsperada, linha, numeroLinha, metadados, linhaExibida) {
@@ -133,7 +140,14 @@ function diasDesde_(valor) {
 function obterMetadadosGestao_() {
   const aba = abrirPlanilha_().getSheetByName(JL_CONFIG.MANAGEMENT_SHEET);
   const mapa = {};
-  if (!aba || aba.getLastRow() < 2) return mapa;
+  if (!aba) return mapa;
+  let quantidadeConfigurada = false;
+  if (typeof aba.getLastColumn === "function" && typeof aba.getRange === "function" && aba.getLastColumn() >= JL_CONFIG.MANAGEMENT_HEADERS.length) {
+    const cabecalho = aba.getRange(1, JL_CONFIG.MANAGEMENT_HEADERS.length, 1, 1).getDisplayValues()[0][0];
+    quantidadeConfigurada = String(cabecalho || "").trim() === "QUANTIDADE_MINUTAS";
+  }
+  mapa.__quantidadeConfigurada = quantidadeConfigurada;
+  if (aba.getLastRow() < 2) return mapa;
   const linhas = aba.getRange(2, 1, aba.getLastRow() - 1, JL_CONFIG.MANAGEMENT_HEADERS.length).getValues();
   linhas.forEach((linha, indice) => {
     const origem = Number(linha[0]);
@@ -143,7 +157,9 @@ function obterMetadadosGestao_() {
       prioridade: JL_CONFIG.PRIORITIES.includes(String(linha[1])) ? String(linha[1]) : "Normal",
       prazo: dataIso_(linha[2]),
       atualizadoEm: linha[3] instanceof Date ? linha[3].toISOString() : String(linha[3] || ""),
-      atualizadoPor: normalizarEmail_(linha[4])
+      atualizadoPor: normalizarEmail_(linha[4]),
+      quantidade: quantidadeConfigurada ? (linha[5] == null ? "" : linha[5]) : "",
+      quantidadeConfigurada: quantidadeConfigurada
     };
   });
   return mapa;
@@ -159,7 +175,15 @@ function validarGestao_(prioridade, prazo) {
   if (!abrirPlanilha_().getSheetByName(JL_CONFIG.MANAGEMENT_SHEET)) throw new Error("Execute instalarEstruturasAuxiliares() no editor antes de salvar.");
 }
 
-function salvarMetadadosGestao_(usuario, numeroLinha, prioridade, prazo) {
+function validarQuantidadeSolicitacao_(valor) {
+  const texto = String(valor == null ? "" : valor).trim();
+  if (!texto) return "";
+  const quantidade = quantidadeSolicitacao_(valor);
+  if (quantidade === null) throw new Error("A quantidade da solicitação deve ser um inteiro positivo de minutas, ou ficar vazia enquanto aguarda conferência.");
+  return quantidade;
+}
+
+function salvarMetadadosGestao_(usuario, numeroLinha, prioridade, prazo, quantidade) {
   validarGestao_(prioridade, prazo);
   const novaPrioridade = String(prioridade || "Normal").trim();
   if (!JL_CONFIG.PRIORITIES.includes(novaPrioridade)) throw new Error("Prioridade inválida.");
@@ -169,11 +193,14 @@ function salvarMetadadosGestao_(usuario, numeroLinha, prioridade, prazo) {
   const aba = planilha.getSheetByName(JL_CONFIG.MANAGEMENT_SHEET);
   if (!aba) throw new Error("Execute instalarEstruturasAuxiliares_ para criar a gestão de prazos.");
   const existentes = obterMetadadosGestao_();
-  const anterior = existentes[numeroLinha] || { prioridade: "Normal", prazo: "" };
-  const valores = [numeroLinha, novaPrioridade, novoPrazo ? new Date(novoPrazo + "T12:00:00") : "", new Date(), usuario.email];
+  if (!existentes.__quantidadeConfigurada) throw new Error("A aba GESTAO_SOLICITACOES precisa ser atualizada pelo administrador antes de gravar a quantidade da solicitação.");
+  const anterior = existentes[numeroLinha] || { prioridade: "Normal", prazo: "", quantidade: "", quantidadeConfigurada: true };
+  const novaQuantidade = quantidade === undefined ? validarQuantidadeSolicitacao_(anterior.quantidade) : validarQuantidadeSolicitacao_(quantidade);
+  const valores = [numeroLinha, novaPrioridade, novoPrazo ? new Date(novoPrazo + "T12:00:00") : "", new Date(), usuario.email, novaQuantidade];
   if (anterior.linhaGestao) aba.getRange(anterior.linhaGestao, 1, 1, valores.length).setValues([valores]);
   else aba.appendRow(valores);
-  return { antes: { prioridade: anterior.prioridade, prazo: anterior.prazo }, depois: { prioridade: novaPrioridade, prazo: novoPrazo } };
+  return { antes: { prioridade: anterior.prioridade, prazo: anterior.prazo, quantidade: anterior.quantidade || "" },
+    depois: { prioridade: novaPrioridade, prazo: novoPrazo, quantidade: novaQuantidade } };
 }
 
 function listarHistorico_(numeroLinha) {

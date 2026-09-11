@@ -34,7 +34,7 @@ As respostas originais do formulário permanecem na aba `Respostas ao formulári
 
 - `USUARIOS`: perfis, situação e último acesso.
 - `AUDITORIA`: alterações com usuário, data, valores anteriores e novos.
-- `GESTAO_SOLICITACOES`: prioridade, prazo e última atualização.
+- `GESTAO_SOLICITACOES`: prioridade, prazo, quantidade operacional da solicitação e última atualização.
 
 Alterações no cadastro de juiz são gravadas na linha original da aba `Respostas ao formulário 1`, somente por `ADMIN`, com controle de versão para evitar sobrescrever uma edição mais recente e registro na aba `AUDITORIA`. Nome não pode ser alterado enquanto houver solicitações ativas designadas ao cadastro; status de encerramento também exige que essas solicitações sejam tratadas primeiro.
 
@@ -112,11 +112,13 @@ Após esta atualização, uma nova autorização será solicitada porque o aplic
 
 ## Observações
 
-- A capacidade é calculada usando a quantidade de minutas das solicitações ativas designadas pelo nome do juiz.
+- A capacidade mensal pertence exclusivamente ao cadastro do juiz na resposta do formulário. A quantidade de cada solicitação é operacional e fica em `GESTAO_SOLICITACOES.QUANTIDADE_MINUTAS`; ela é somada somente enquanto a solicitação estiver ativa e designada.
+- A aba `Juízes Leigos Disponíveis` é uma visão derivada da origem. Não edite, exclua nem reordene suas linhas para corrigir cadastros; atualize a resposta original ou use a aba Administração do site.
 - A capacidade declarada do juiz aceita inteiro não negativo. Em solicitações, quantidades informadas devem ser inteiros positivos; solicitações antigas sem quantidade não reduzem a carga conhecida, aparecem como carga parcial e não invalidam a capacidade do juiz. A interface identifica esse caso como “Quantidade não informada”, reservando “Revisar quantidade” para valores preenchidos de forma inválida. Valores ambíguos exigem correção na origem, e uma nova designação continua exigindo quantidade positiva.
+- Ao designar ou reabrir uma solicitação, o gestor deve informar uma quantidade positiva. O campo pode permanecer vazio durante a conferência de registros legados; nesse caso o pedido não entra no saldo conhecido e não pode ser designado/reaberto até ser conferido.
 - Designações acima da capacidade continuam possíveis, mas exigem confirmação e justificativa.
 - Notificações são enviadas apenas para endereços do domínio institucional.
-- O sistema espera os 17 cabeçalhos originais da planilha fornecida.
+- O sistema espera os 17 cabeçalhos originais da planilha fornecida. Não remova nem mova a coluna `Número de minutas em que necessita trabalhar no mês atual:`: em registros de juiz ela continua sendo a capacidade mensal. A nova coluna `QUANTIDADE_MINUTAS` existe apenas na aba auxiliar de gestão.
 - Links permanecem no navegador; nenhuma chave do AppSheet é usada ou exposta.
 - Antes da produção, realize um piloto com dados não sensíveis e submeta o sistema à TI/Segurança da Informação do TJES.
 

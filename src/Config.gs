@@ -20,7 +20,9 @@ var JL_CONFIG = Object.freeze({
   STATUS: Object.freeze(["Pendente", "Em atendimento", "Concluído", "Cancelado"]),
   PRIORITIES: Object.freeze(["Normal", "Alta", "Urgente"]),
   USER_HEADERS: Object.freeze(["EMAIL", "NOME", "PERFIL", "ATIVO", "ULTIMO_ACESSO"]),
-  MANAGEMENT_HEADERS: Object.freeze(["LINHA_ORIGEM", "PRIORIDADE", "PRAZO", "ATUALIZADO_EM", "ATUALIZADO_POR"]),
+  // A quantidade da solicitação é operacional: não deve ser confundida com
+  // CAPACITY, que permanece na resposta do formulário para o cadastro do juiz.
+  MANAGEMENT_HEADERS: Object.freeze(["LINHA_ORIGEM", "PRIORIDADE", "PRAZO", "ATUALIZADO_EM", "ATUALIZADO_POR", "QUANTIDADE_MINUTAS"]),
   HEADERS: Object.freeze({
     TIMESTAMP: "Carimbo de data/hora",
     EMAIL: "Endereço de e-mail",

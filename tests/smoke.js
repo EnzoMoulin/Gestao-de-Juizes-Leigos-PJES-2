@@ -48,6 +48,8 @@ assert.strictEqual(call("textoCelulaSeguro_('texto comum')"), 'texto comum');
 assert.strictEqual(call("textoCelulaSeguro_('=IMPORTXML(\"x\")')"), "'=IMPORTXML(\"x\")");
 assert.strictEqual(call("statusNormalizado_('')"), 'Pendente');
 assert.strictEqual(call("numeroQuantidade_('20 minutas')"), 20);
+assert.strictEqual(call("quantidadeSolicitacao_('20 minutas')"), 20);
+assert.strictEqual(call("quantidadeSolicitacao_('0')"), null);
 assert.strictEqual(call("normalizarNome_('João Ávila')"), 'joao avila');
 assert.strictEqual(call("dataIso_(new Date('2026-09-04T12:00:00Z'))"), '2026-09-04');
 
@@ -74,6 +76,7 @@ assert.match(indexHtml, /id="tutorialPanel"/);
 assert.match(indexHtml, /id="adminPanel"/);
 assert.match(indexHtml, /id="adminJudgesTable"/);
 assert.match(indexHtml, /id="judgeDialog"/);
+assert.match(indexHtml, /id="editQuantity"/);
 assert.match(indexHtml, /id="detailsDialog"/);
 assert.match(indexHtml, /Designar juiz e iniciar atendimento/);
 assert.match(appHtml, /exportRequests/);
@@ -86,6 +89,8 @@ assert.match(apiCode, /function instalarEstruturasAuxiliares\(\)/);
 assert.match(apiCode, /function verificarConfiguracao\(\)/);
 assert.match(apiCode, /function apiSalvarJuiz\(token, dados\)/);
 assert.match(apiCode, /function apiListarCadastrosJuizes\(token\)/);
+const configCode = fs.readFileSync('src/Config.gs', 'utf8');
+assert.match(configCode, /QUANTIDADE_MINUTAS/);
 
 const appScript = appHtml.replace(/^<script>\s*/, '').replace(/\s*<\/script>\s*$/, '');
 assert.doesNotThrow(() => new Function(appScript));

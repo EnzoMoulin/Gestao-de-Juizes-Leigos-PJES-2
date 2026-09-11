@@ -21,7 +21,7 @@ function apiBootstrap(token) {
     solicitacoes: dados.solicitacoes,
     juizes: dados.juizes,
     fonte: dados.fonte,
-    versao: "2026.09.11-admin-juizes",
+    versao: "2026.09.11-quantidade-operacional",
     statusPermitidos: JL_CONFIG.STATUS,
     prioridadesPermitidas: JL_CONFIG.PRIORITIES,
     notificacoesAtivas: notificacoesAtivas_(),
@@ -41,14 +41,14 @@ function apiBootstrap(token) {
   };
 }
 
-function apiDesignarJuiz(token, numeroLinha, nomeJuiz, justificativaExcesso, permitirExcesso, prioridade, prazo, versaoEsperada) {
+function apiDesignarJuiz(token, numeroLinha, nomeJuiz, justificativaExcesso, permitirExcesso, prioridade, prazo, versaoEsperada, quantidadeSolicitacao) {
   const usuario = exigirSessao_(token, [JL_CONFIG.ROLES.MANAGER, JL_CONFIG.ROLES.ADMIN]);
-  return designarJuiz_(usuario, numeroLinha, nomeJuiz, justificativaExcesso, permitirExcesso === true, prioridade, prazo, versaoEsperada);
+  return designarJuiz_(usuario, numeroLinha, nomeJuiz, justificativaExcesso, permitirExcesso === true, prioridade, prazo, versaoEsperada, quantidadeSolicitacao);
 }
 
-function apiAtualizarSolicitacao(token, numeroLinha, status, observacoes, prioridade, prazo, versaoEsperada, justificativaExcesso, permitirExcesso) {
+function apiAtualizarSolicitacao(token, numeroLinha, status, observacoes, prioridade, prazo, versaoEsperada, justificativaExcesso, permitirExcesso, quantidadeSolicitacao) {
   const usuario = exigirSessao_(token, [JL_CONFIG.ROLES.MANAGER, JL_CONFIG.ROLES.ADMIN]);
-  return atualizarSolicitacao_(usuario, numeroLinha, status, observacoes, prioridade, prazo, versaoEsperada, justificativaExcesso, permitirExcesso === true);
+  return atualizarSolicitacao_(usuario, numeroLinha, status, observacoes, prioridade, prazo, versaoEsperada, justificativaExcesso, permitirExcesso === true, quantidadeSolicitacao);
 }
 
 function apiHistoricoSolicitacao(token, numeroLinha) {
@@ -95,6 +95,11 @@ function verificarConfiguracao_() {
   [JL_CONFIG.USERS_SHEET, JL_CONFIG.AUDIT_SHEET, JL_CONFIG.MANAGEMENT_SHEET].forEach(nome => {
     if (!planilha.getSheetByName(nome)) throw new Error("Aba auxiliar ausente: " + nome + ". Execute instalarEstruturasAuxiliares().");
   });
+  const gestao = planilha.getSheetByName(JL_CONFIG.MANAGEMENT_SHEET);
+  const cabecalhoGestao = gestao.getRange(1, 1, 1, JL_CONFIG.MANAGEMENT_HEADERS.length).getDisplayValues()[0];
+  if (String(cabecalhoGestao[5] || "").trim() !== "QUANTIDADE_MINUTAS") {
+    throw new Error("A aba GESTAO_SOLICITACOES precisa da coluna QUANTIDADE_MINUTAS. Execute prepararProjetoNoEditor_ novamente.");
+  }
   return "Configuração válida. Aba encontrada: " + aba.getName() + ".";
 }
 
@@ -137,7 +142,23 @@ function instalarEstruturasAuxiliares_() {
   usuarios.autoResizeColumns(1, JL_CONFIG.USER_HEADERS.length);
   auditoria.autoResizeColumns(1, 7);
   gestao.autoResizeColumns(1, JL_CONFIG.MANAGEMENT_HEADERS.length);
+  alinharCabecalhosVisaoJuizes_();
   return "Estruturas instaladas: USUARIOS, AUDITORIA e GESTAO_SOLICITACOES.";
+}
+
+// A aba de disponibilidade é uma visão derivada por FILTER. O cabeçalho deve
+// ter exatamente a mesma ordem das colunas que a fórmula retorna (A:R), sem
+// criar uma coluna extra no meio dos dados. Esta rotina só ajusta a linha de
+// cabeçalho e mantém a fórmula e as respostas originais intactas.
+function alinharCabecalhosVisaoJuizes_() {
+  const planilha = abrirPlanilha_();
+  const fonte = obterFonte_();
+  const visao = planilha.getSheetByName("Juízes Leigos Disponíveis");
+  if (!visao || fonte.getLastColumn() < 18) return false;
+  const cabecalhos = fonte.getRange(1, 1, 1, 18).getDisplayValues()[0];
+  visao.getRange(1, 1, 1, 19).setValues([cabecalhos.concat([""])]);
+  visao.setFrozenRows(1);
+  return true;
 }
 
 function instalarEstruturasAuxiliares() {

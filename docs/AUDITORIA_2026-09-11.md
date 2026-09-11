@@ -4,15 +4,21 @@ Data: 11 de setembro de 2026
 Projeto: PJES — Gestão de Juízes Leigos  
 Base examinada: `072ca67fd793f0a742da49656931d9c1df8190c1`, ramo `main`  
 Repositório: https://github.com/actualrat1984/Gestao-de-Juizes-Leigos-PJES  
-Versão candidata: `2026.09.11` — ramo local `feat/auditoria-ui-conecta-jules`
+Versão candidata: `2026.09.11-quantidade-operacional` — ramo local `feat/auditoria-ui-conecta-jules`
 
 ## Resultado
 
-A revisão confirmou riscos no controle de edições simultâneas, no tratamento de quantidades e na reabertura de solicitações. A versão candidata corrige esses caminhos e acrescenta recursos para localizar, revisar e imprimir a fila de trabalho. As cinco suítes locais passaram; duas delas são novas e abrangem 24 cenários de integridade e interface.
+A revisão confirmou riscos no controle de edições simultâneas, no tratamento de quantidades e na reabertura de solicitações. A versão candidata corrige esses caminhos e acrescenta recursos para localizar, revisar e imprimir a fila de trabalho. As cinco suítes locais passaram; duas delas abrangem 31 cenários de integridade e interface.
 
 **A candidata está preparada para revisão e homologação. Não foi aplicada ao GitHub remoto, ao Apps Script ou à planilha de produção.** A conexão GitHub informou `pull: true` e `push: false`; por isso, as alterações são entregues como pacote e patch. A validação visual não foi concluída: o navegador de revisão bloqueou a abertura da prévia pela política de URLs. O teste de interface usou DOM simulado e não comprova aparência ou acessibilidade integral.
 
 Permanecem riscos de associação por linha/nome e gravação parcial entre abas. Eles precisam de tratamento antes de uma expansão de uso institucional. Esta auditoria é técnica e não constitui homologação administrativa, parecer jurídico ou certificação de segurança.
+
+### Adendo: quantidade operacional e visão de juízes
+
+`CAPACITY` continua sendo lido somente como limite mensal no cadastro de juiz leigo. Para solicitações de magistrado/assessor, a quantidade passa a ser mantida em `GESTAO_SOLICITACOES.QUANTIDADE_MINUTAS`. O site permite preencher ou corrigir esse campo na tela de gestão, inclui a quantidade na versão concorrente e exige inteiro positivo ao designar ou reabrir. Solicitações legadas sem valor ficam como carga parcial: não inventam saldo e não tornam o cadastro do juiz inválido por si só.
+
+A aba `Juízes Leigos Disponíveis` continua sendo uma visão `FILTER` da origem. O instalador alinha somente seus cabeçalhos à ordem A:R retornada pela fórmula, removendo o deslocamento causado pelo cabeçalho extra; nenhuma resposta é apagada, movida ou reordenada.
 
 ## Escopo e evidências
 
@@ -92,8 +98,8 @@ O relatório impresso não acrescenta campos de processos, e-mails ou observaç�
 | `node tests/smoke.js` | Aprovado | Mocks e verificações estruturais existentes |
 | `node tests/regression.js` | Aprovado | Sessões, origem, funções, datas e conteúdo seguro com mocks |
 | `node tests/maintenance.js` | Aprovado | Manutenção e autorização em ambiente simulado |
-| `node tests/integrity.js` | 15 cenários aprovados | Sheets/cache simulados; sem escrita externa |
-| `node tests/ui.js` | 9 cenários aprovados | DOM simulado; sem navegador gráfico |
+| `node tests/integrity.js` | 20 cenários aprovados | Sheets/cache simulados; sem escrita externa |
+| `node tests/ui.js` | 11 cenários aprovados | DOM simulado; sem navegador gráfico |
 | IDs e referências da UI | Aprovados | IDs únicos e seletores existentes |
 | `git diff --check` | Aprovado | Integridade textual do diff |
 | Navegador desktop/celular | **Não executado até o fim** | Prévia bloqueada pela política de acesso do navegador de revisão |
@@ -112,9 +118,10 @@ A suíte de UI verifica paginação, manutenção de página, lista compacta, bu
 5. Atualizar **todos os arquivos de `src` juntos** no Apps Script de homologação. O cliente e os endpoints mudaram juntos; não atualizar somente o HTML ou somente o servidor.
 6. Manter o `.clasp.json` privado existente com o ID correto. O pacote não inclui credenciais, IDs reais de implantação nem propriedades privadas. `clasp push` atualiza o código do projeto, mas a URL `/exec` exige nova versão da implantação.
 7. Homologar com dados fictícios e, depois, base apropriada: dois gestores editando o mesmo pedido; reabertura com/sem excesso; quantidades inválidas; CONSULTA e conta externa; timeout; CSV; impressão; teclado; leitor de tela; desktop/celular e ampliação de 200%.
-8. Só depois dos testes, publicar a versão aprovada conforme o procedimento do responsável pelo ambiente. Orientar usuários a recarregar telas antigas.
+8. Execute `prepararProjetoNoEditor_` após atualizar o código. Ele acrescenta `QUANTIDADE_MINUTAS` à aba `GESTAO_SOLICITACOES` e alinha o cabeçalho da visão derivada, sem apagar respostas.
+9. Só depois dos testes, publicar a versão aprovada conforme o procedimento do responsável pelo ambiente. Orientar usuários a recarregar telas antigas.
 
-Não há migração de schema nesta candidata. O comando de instalação de estruturas auxiliares não precisa ser reexecutado apenas pelas mudanças de UI e integridade quando as abas atuais já estão corretas.
+Há apenas uma alteração aditiva de schema: a coluna `QUANTIDADE_MINUTAS` na aba auxiliar. O comando de instalação deve ser executado uma vez para criar essa coluna e corrigir o cabeçalho da visão derivada; ele não reescreve a origem.
 
 ### Prévia local
 

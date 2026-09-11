@@ -80,15 +80,21 @@ function cadastroJuizDaLinha_(linhaExibida, linhaBruta, mapa, numeroLinha) {
 function solicitacaoDaLinha_(linhaExibida, linhaBruta, mapa, numeroLinha, metadados, gerente) {
   const status = statusNormalizado_(valor_(linhaExibida, mapa, "STATUS"));
   const criadoEm = valor_(linhaBruta, mapa, "TIMESTAMP");
-  const gestao = metadados[numeroLinha] || { prioridade: "Normal", prazo: "", atualizadoEm: "", atualizadoPor: "" };
+  const metadadosSeguros = metadados || {};
+  const gestao = metadadosSeguros[numeroLinha] || { prioridade: "Normal", prazo: "", atualizadoEm: "", atualizadoPor: "" };
   const hoje = dataIso_(new Date());
-  const quantidade = valor_(linhaExibida, mapa, "CAPACITY");
+  const quantidadeConfigurada = gestao.quantidadeConfigurada === true || metadadosSeguros.__quantidadeConfigurada === true;
+  // Depois desta versão, CAPACITY nunca é usado para solicitações: ele é o
+  // limite mensal do cadastro do juiz. Sem a coluna auxiliar, a solicitação
+  // fica explicitamente sem quantidade e a gravação administrativa é bloqueada
+  // até o instalador criar o schema novo.
+  const quantidade = quantidadeConfigurada ? (gestao.quantidade == null ? "" : gestao.quantidade) : "";
   const quantidadeNumerica = numeroQuantidade_(quantidade);
   return {
     id: numeroLinha,
-    versao: versaoSolicitacao_(linhaBruta, numeroLinha, metadados, linhaExibida),
+    versao: versaoSolicitacao_(linhaBruta, numeroLinha, metadadosSeguros, linhaExibida),
     quantidadeInformada: campoPreenchido_(quantidade),
-    quantidadeValida: quantidadeInteira_(quantidade) > 0,
+    quantidadeValida: quantidadeSolicitacao_(quantidade) !== null,
     data: valor_(linhaExibida, mapa, "TIMESTAMP"),
     dataIso: criadoEm instanceof Date ? criadoEm.toISOString() : "",
     diasEspera: diasDesde_(criadoEm),
@@ -186,6 +192,7 @@ function listarDados_(usuario) {
     respostas: respostas, solicitacoes: todasSolicitacoes.length, juizesAtivos: juizes.length,
     juizesEncerrados: juizesEncerrados, ignoradas: ignoradas.slice(0, 20),
     totalIgnoradas: ignoradas.length, statusDesconhecidos: statusDesconhecidos.slice(0, 20),
+    quantidadeGestaoConfigurada: metadados.__quantidadeConfigurada === true,
     ultimaLinha: aba.getLastRow()
   } : null;
   return { solicitacoes: solicitacoes, todasSolicitacoes: todasSolicitacoes, juizes: juizes, fonte: fonte };
@@ -233,7 +240,7 @@ function registrarAuditoria_(usuario, acao, linha, antes, depois) {
   aba.appendRow([new Date(), usuario.email, usuario.perfil, acao, linha, JSON.stringify(antes || {}), JSON.stringify(depois || {})]);
 }
 
-function designarJuiz_(usuario, numeroLinha, nomeJuiz, justificativaExcesso, permitirExcesso, prioridade, prazo, versaoEsperada) {
+function designarJuiz_(usuario, numeroLinha, nomeJuiz, justificativaExcesso, permitirExcesso, prioridade, prazo, versaoEsperada, quantidadeSolicitacao) {
   const nome = String(nomeJuiz || "").trim();
   const justificativa = String(justificativaExcesso || "").trim();
   if (!nome || nome.length > 150) throw new Error("Selecione uma juíza ou um juiz leigo válido.");
@@ -249,10 +256,15 @@ function designarJuiz_(usuario, numeroLinha, nomeJuiz, justificativaExcesso, per
     if (!ehSolicitacao_(atual, mapa)) throw new Error("A linha selecionada não é uma solicitação.");
 
     const dados = listarDados_(usuario);
+    const metadados = obterMetadadosGestao_();
     validarGestao_(prioridade, prazo);
-    exigirVersaoSolicitacao_(versaoEsperada, atualBruta, linha, obterMetadadosGestao_(), atual);
+    if (!metadados.__quantidadeConfigurada) throw new Error("A aba GESTAO_SOLICITACOES precisa ser atualizada pelo administrador antes de designar uma solicitação.");
+    exigirVersaoSolicitacao_(versaoEsperada, atualBruta, linha, metadados, atual);
+    const solicitacaoAtual = dados.todasSolicitacoes.find(item => item.id === linha);
+    const quantidadeParaSalvar = quantidadeSolicitacao === undefined ? (solicitacaoAtual ? solicitacaoAtual.quantidade : "") : quantidadeSolicitacao;
+    const quantidadeValidada = validarQuantidadeSolicitacao_(quantidadeParaSalvar);
     const verificacao = validarCapacidadeDesignacao_(dados, linha, nome,
-      quantidadeInteira_(valor_(atual, mapa, "CAPACITY")), justificativa, permitirExcesso);
+      quantidadeValidada || null, justificativa, permitirExcesso);
     const juiz = verificacao.juiz;
     const excede = verificacao.excede;
 
@@ -260,7 +272,7 @@ function designarJuiz_(usuario, numeroLinha, nomeJuiz, justificativaExcesso, per
     escreverCampo_(aba, mapa, linha, "ASSIGNED_JUDGE", textoCelulaSeguro_(nome));
     escreverCampo_(aba, mapa, linha, "ASSIGNED_AT", new Date());
     escreverCampo_(aba, mapa, linha, "STATUS", "Em atendimento");
-    const alteracaoGestao = salvarMetadadosGestao_(usuario, linha, prioridade, prazo);
+    const alteracaoGestao = salvarMetadadosGestao_(usuario, linha, prioridade, prazo, quantidadeValidada);
     const depois = { juiz: nome, status: "Em atendimento", justificativaExcesso: excede ? justificativa : "" };
     registrarAuditoria_(usuario, antes.juiz && normalizarNome_(antes.juiz) !== normalizarNome_(nome) ? "REDESIGNAR_JUIZ" : "DESIGNAR_JUIZ", linha,
       Object.assign({}, antes, alteracaoGestao.antes), Object.assign({}, depois, alteracaoGestao.depois));
@@ -275,7 +287,7 @@ function designarJuiz_(usuario, numeroLinha, nomeJuiz, justificativaExcesso, per
   }
 }
 
-function atualizarSolicitacao_(usuario, numeroLinha, status, observacoes, prioridade, prazo, versaoEsperada, justificativaExcesso, permitirExcesso) {
+function atualizarSolicitacao_(usuario, numeroLinha, status, observacoes, prioridade, prazo, versaoEsperada, justificativaExcesso, permitirExcesso, quantidadeSolicitacao) {
   const novoStatus = String(status || "").trim();
   if (!JL_CONFIG.STATUS.includes(novoStatus)) throw new Error("Status inválido.");
   const notas = String(observacoes || "").trim();
@@ -290,24 +302,29 @@ function atualizarSolicitacao_(usuario, numeroLinha, status, observacoes, priori
     const atual = aba.getRange(linha, 1, 1, aba.getLastColumn()).getDisplayValues()[0];
     const atualBruta = aba.getRange(linha, 1, 1, aba.getLastColumn()).getValues()[0];
     if (!ehSolicitacao_(atual, mapa)) throw new Error("A linha selecionada não é uma solicitação.");
+    const metadados = obterMetadadosGestao_();
     const antes = {
       status: statusNormalizado_(valor_(atual, mapa, "STATUS")),
       observacoes: valor_(atual, mapa, "NOTES")
     };
     validarGestao_(prioridade, prazo);
-    exigirVersaoSolicitacao_(versaoEsperada, atualBruta, linha, obterMetadadosGestao_(), atual);
+    if (!metadados.__quantidadeConfigurada) throw new Error("A aba GESTAO_SOLICITACOES precisa ser atualizada pelo administrador antes de editar a quantidade da solicitação.");
+    exigirVersaoSolicitacao_(versaoEsperada, atualBruta, linha, metadados, atual);
+    const solicitacaoAtual = solicitacaoDaLinha_(atual, atualBruta, mapa, linha, metadados, true);
+    const quantidadeParaSalvar = quantidadeSolicitacao === undefined ? solicitacaoAtual.quantidade : quantidadeSolicitacao;
+    const quantidadeValidada = validarQuantidadeSolicitacao_(quantidadeParaSalvar);
     const nomeJuiz = String(valor_(atual, mapa, "ASSIGNED_JUDGE") || "").trim();
     if (novoStatus === "Em atendimento" && !nomeJuiz) throw new Error("Designe um juiz antes de iniciar o atendimento.");
     const reabrindo = statusFinal_(antes.status) && !statusFinal_(novoStatus);
     let excede = false;
     if (reabrindo && nomeJuiz) {
       excede = validarCapacidadeDesignacao_(listarDados_(usuario), linha, nomeJuiz,
-        quantidadeInteira_(valor_(atual, mapa, "CAPACITY")), justificativaExcesso, permitirExcesso).excede;
+        quantidadeValidada || null, justificativaExcesso, permitirExcesso).excede;
     }
 
     escreverCampo_(aba, mapa, linha, "STATUS", novoStatus);
     escreverCampo_(aba, mapa, linha, "NOTES", textoCelulaSeguro_(notas));
-    const alteracaoGestao = salvarMetadadosGestao_(usuario, linha, prioridade, prazo);
+    const alteracaoGestao = salvarMetadadosGestao_(usuario, linha, prioridade, prazo, quantidadeValidada);
     registrarAuditoria_(usuario, "ATUALIZAR_SOLICITACAO", linha,
       Object.assign({}, antes, alteracaoGestao.antes),
       Object.assign({ status: novoStatus, observacoes: notas, justificativaExcesso: excede ? String(justificativaExcesso).trim() : "" }, alteracaoGestao.depois));

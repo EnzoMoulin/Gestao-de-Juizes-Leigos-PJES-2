@@ -22,7 +22,8 @@ var JL_CONFIG = Object.freeze({
   STATUS: Object.freeze(["Pendente", "Em atendimento", "Concluído", "Cancelado"]),
   PRIORITIES: Object.freeze(["Normal", "Alta", "Urgente"]),
   USER_HEADERS: Object.freeze(["EMAIL", "NOME", "PERFIL", "ATIVO", "ULTIMO_ACESSO"]),
-  MANAGEMENT_HEADERS: Object.freeze(["LINHA_ORIGEM", "PRIORIDADE", "PRAZO", "ATUALIZADO_EM", "ATUALIZADO_POR"]),
+  // Quantidade operacional da solicitação; não é a capacidade mensal do juiz.
+  MANAGEMENT_HEADERS: Object.freeze(["LINHA_ORIGEM", "PRIORIDADE", "PRAZO", "ATUALIZADO_EM", "ATUALIZADO_POR", "QUANTIDADE_MINUTAS"]),
   HEADERS: Object.freeze({
     TIMESTAMP: "Carimbo de data/hora",
     EMAIL: "Endereço de e-mail",
@@ -89,6 +90,12 @@ function prepararPlanilha() {
     aba.getRange(1, 1, 1, titulos.length).setValues([titulos]);
     aba.setFrozenRows(1);
   });
+  const visao = planilha.getSheetByName("Juízes Leigos Disponíveis");
+  if (visao && fonte.getLastColumn() >= 18) {
+    const cabecalhosVisao = fonte.getRange(1, 1, 1, 18).getDisplayValues()[0];
+    visao.getRange(1, 1, 1, 19).setValues([cabecalhosVisao.concat([""])]);
+    visao.setFrozenRows(1);
+  }
   SpreadsheetApp.flush();
   const mensagem = "Planilha preparada: " + planilha.getName() + " | Origem: " + nomeFonte + " | Abas auxiliares verificadas. As permissões e a implantação do site não foram alteradas.";
   console.log(mensagem);
