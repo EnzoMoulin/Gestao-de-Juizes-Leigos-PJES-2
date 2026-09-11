@@ -77,6 +77,8 @@ assert.match(indexHtml, /id="adminPanel"/);
 assert.match(indexHtml, /id="adminJudgesTable"/);
 assert.match(indexHtml, /id="judgeDialog"/);
 assert.match(indexHtml, /id="editQuantity"/);
+assert.match(indexHtml, /<output id="editQuantity"/);
+assert.doesNotMatch(indexHtml, /<input[^>]*id="editQuantity"/);
 assert.match(indexHtml, /id="detailsDialog"/);
 assert.match(indexHtml, /Designar juiz e iniciar atendimento/);
 assert.match(appHtml, /exportRequests/);
