@@ -28,8 +28,7 @@ function versaoSolicitacao_(linha, numeroLinha, metadados, linhaExibida) {
   const gestao = metadadosSeguros[numeroLinha] || {};
   return hashToken_(JSON.stringify({ linha: linha, exibicao: linhaExibida, origem: numeroLinha,
     prioridade: gestao.prioridade || "Normal", prazo: gestao.prazo || "",
-    atualizadoEm: gestao.atualizadoEm || "", atualizadoPor: gestao.atualizadoPor || "",
-    quantidade: gestao.quantidadeConfigurada ? gestao.quantidade : "" }));
+    atualizadoEm: gestao.atualizadoEm || "", atualizadoPor: gestao.atualizadoPor || "" }));
 }
 
 function exigirVersaoSolicitacao_(versaoEsperada, linha, numeroLinha, metadados, linhaExibida) {
@@ -107,7 +106,7 @@ function validarCapacidadeDesignacao_(dados, linha, nome, quantidade, justificat
   if (candidatos.length > 1) throw new Error("Há cadastros ativos com o mesmo nome. Confira a origem antes de designar.");
   const juiz = candidatos[0];
   if (!juiz) throw new Error("O juiz designado não possui cadastro ativo. Use a designação para escolher outro juiz.");
-  if (quantidade === null || quantidade <= 0) throw new Error("Corrija a quantidade da solicitação na origem: informe um inteiro positivo de minutas.");
+  if (quantidade === null || quantidade <= 0) throw new Error("Peça ao solicitante que informe uma quantidade inteira positiva de minutas no formulário antes de designar ou reabrir.");
   if (!juiz.capacidadeValida || !juiz.statusValido) throw new Error("A capacidade ou o status do juiz precisa de revisão na origem antes da designação.");
   const outras = dados.todasSolicitacoes.filter(item => item.id !== linha && !statusFinal_(item.status) && normalizarNome_(item.juiz) === chave);
   const invalidas = outras.filter(item => item.quantidadeInformada && !item.quantidadeValida);
@@ -141,14 +140,8 @@ function obterMetadadosGestao_() {
   const aba = abrirPlanilha_().getSheetByName(JL_CONFIG.MANAGEMENT_SHEET);
   const mapa = {};
   if (!aba) return mapa;
-  let quantidadeConfigurada = false;
-  if (typeof aba.getLastColumn === "function" && typeof aba.getRange === "function" && aba.getLastColumn() >= JL_CONFIG.MANAGEMENT_HEADERS.length) {
-    const cabecalho = aba.getRange(1, JL_CONFIG.MANAGEMENT_HEADERS.length, 1, 1).getDisplayValues()[0][0];
-    quantidadeConfigurada = String(cabecalho || "").trim() === "QUANTIDADE_MINUTAS";
-  }
-  mapa.__quantidadeConfigurada = quantidadeConfigurada;
   if (aba.getLastRow() < 2) return mapa;
-  const linhas = aba.getRange(2, 1, aba.getLastRow() - 1, JL_CONFIG.MANAGEMENT_HEADERS.length).getValues();
+  const linhas = aba.getRange(2, 1, aba.getLastRow() - 1, 5).getValues();
   linhas.forEach((linha, indice) => {
     const origem = Number(linha[0]);
     if (!Number.isInteger(origem) || origem < 2) return;
@@ -157,9 +150,7 @@ function obterMetadadosGestao_() {
       prioridade: JL_CONFIG.PRIORITIES.includes(String(linha[1])) ? String(linha[1]) : "Normal",
       prazo: dataIso_(linha[2]),
       atualizadoEm: linha[3] instanceof Date ? linha[3].toISOString() : String(linha[3] || ""),
-      atualizadoPor: normalizarEmail_(linha[4]),
-      quantidade: quantidadeConfigurada ? (linha[5] == null ? "" : linha[5]) : "",
-      quantidadeConfigurada: quantidadeConfigurada
+      atualizadoPor: normalizarEmail_(linha[4])
     };
   });
   return mapa;
@@ -175,15 +166,13 @@ function validarGestao_(prioridade, prazo) {
   if (!abrirPlanilha_().getSheetByName(JL_CONFIG.MANAGEMENT_SHEET)) throw new Error("Execute instalarEstruturasAuxiliares() no editor antes de salvar.");
 }
 
-function validarQuantidadeSolicitacao_(valor) {
-  const texto = String(valor == null ? "" : valor).trim();
-  if (!texto) return "";
-  const quantidade = quantidadeSolicitacao_(valor);
-  if (quantidade === null) throw new Error("A quantidade da solicitação deve ser um inteiro positivo de minutas, ou ficar vazia enquanto aguarda conferência.");
-  return quantidade;
+// Argumento legado mantido apenas para rejeitar clientes antigos ou adulterados.
+function rejeitarQuantidadeAdministrativa_(valor) {
+  if (valor !== undefined) throw new Error("A quantidade é informada pelo solicitante no formulário e não pode ser alterada pela administração. Atualize a página.");
 }
 
 function salvarMetadadosGestao_(usuario, numeroLinha, prioridade, prazo, quantidade) {
+  rejeitarQuantidadeAdministrativa_(quantidade);
   validarGestao_(prioridade, prazo);
   const novaPrioridade = String(prioridade || "Normal").trim();
   if (!JL_CONFIG.PRIORITIES.includes(novaPrioridade)) throw new Error("Prioridade inválida.");
@@ -193,14 +182,12 @@ function salvarMetadadosGestao_(usuario, numeroLinha, prioridade, prazo, quantid
   const aba = planilha.getSheetByName(JL_CONFIG.MANAGEMENT_SHEET);
   if (!aba) throw new Error("Execute instalarEstruturasAuxiliares_ para criar a gestão de prazos.");
   const existentes = obterMetadadosGestao_();
-  if (!existentes.__quantidadeConfigurada) throw new Error("A aba GESTAO_SOLICITACOES precisa ser atualizada pelo administrador antes de gravar a quantidade da solicitação.");
-  const anterior = existentes[numeroLinha] || { prioridade: "Normal", prazo: "", quantidade: "", quantidadeConfigurada: true };
-  const novaQuantidade = quantidade === undefined ? validarQuantidadeSolicitacao_(anterior.quantidade) : validarQuantidadeSolicitacao_(quantidade);
-  const valores = [numeroLinha, novaPrioridade, novoPrazo ? new Date(novoPrazo + "T12:00:00") : "", new Date(), usuario.email, novaQuantidade];
+  const anterior = existentes[numeroLinha] || { prioridade: "Normal", prazo: "" };
+  const valores = [numeroLinha, novaPrioridade, novoPrazo ? new Date(novoPrazo + "T12:00:00") : "", new Date(), usuario.email];
   if (anterior.linhaGestao) aba.getRange(anterior.linhaGestao, 1, 1, valores.length).setValues([valores]);
   else aba.appendRow(valores);
-  return { antes: { prioridade: anterior.prioridade, prazo: anterior.prazo, quantidade: anterior.quantidade || "" },
-    depois: { prioridade: novaPrioridade, prazo: novoPrazo, quantidade: novaQuantidade } };
+  return { antes: { prioridade: anterior.prioridade, prazo: anterior.prazo },
+    depois: { prioridade: novaPrioridade, prazo: novoPrazo } };
 }
 
 function listarHistorico_(numeroLinha) {
