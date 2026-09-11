@@ -21,7 +21,7 @@ function apiBootstrap(token) {
     solicitacoes: dados.solicitacoes,
     juizes: dados.juizes,
     fonte: dados.fonte,
-    versao: "2026.09.11-quantidade-operacional",
+    versao: "2026.09.11-quantidade-solicitante",
     statusPermitidos: JL_CONFIG.STATUS,
     prioridadesPermitidas: JL_CONFIG.PRIORITIES,
     notificacoesAtivas: notificacoesAtivas_(),
@@ -95,10 +95,8 @@ function verificarConfiguracao_() {
   [JL_CONFIG.USERS_SHEET, JL_CONFIG.AUDIT_SHEET, JL_CONFIG.MANAGEMENT_SHEET].forEach(nome => {
     if (!planilha.getSheetByName(nome)) throw new Error("Aba auxiliar ausente: " + nome + ". Execute instalarEstruturasAuxiliares().");
   });
-  const gestao = planilha.getSheetByName(JL_CONFIG.MANAGEMENT_SHEET);
-  const cabecalhoGestao = gestao.getRange(1, 1, 1, JL_CONFIG.MANAGEMENT_HEADERS.length).getDisplayValues()[0];
-  if (String(cabecalhoGestao[5] || "").trim() !== "QUANTIDADE_MINUTAS") {
-    throw new Error("A aba GESTAO_SOLICITACOES precisa da coluna QUANTIDADE_MINUTAS. Execute prepararProjetoNoEditor_ novamente.");
+  if (mapaCabecalhos_(aba)[JL_CONFIG.REQUEST_QUANTITY_HEADER] === undefined) {
+    throw new Error("Inclua no formulário a pergunta obrigatória para magistrados/assessores: " + JL_CONFIG.REQUEST_QUANTITY_HEADER + " Envie uma resposta de teste e confira o cabeçalho na planilha vinculada.");
   }
   return "Configuração válida. Aba encontrada: " + aba.getName() + ".";
 }
