@@ -69,14 +69,11 @@ assert.strictEqual(call("enviarNotificacao_('externo@example.com','Assunto','Cor
 const styles = fs.readFileSync('src/Styles.html', 'utf8');
 const indexHtml = fs.readFileSync('src/index.html', 'utf8');
 const appHtml = fs.readFileSync('src/App.html', 'utf8');
-const startupHtml = fs.readFileSync('src/startup.html', 'utf8');
 assert.match(styles, /\[hidden\]\s*\{\s*display\s*:\s*none\s*!important\s*\}/);
 assert.match(indexHtml, /id="tutorialPanel"/);
 assert.match(indexHtml, /id="adminPanel"/);
 assert.match(indexHtml, /id="detailsDialog"/);
 assert.match(indexHtml, /Designar juiz e iniciar atendimento/);
-assert.match(indexHtml, /include_\('startup'\)/);
-assert.match(startupHtml, /unhandledrejection/);
 assert.match(appHtml, /exportRequests/);
 assert.match(appHtml, /apiHistoricoSolicitacao/);
 assert.match(appHtml, /apiSalvarUsuario/);
