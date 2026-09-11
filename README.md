@@ -19,6 +19,7 @@ Auditoria e mudanças em [docs/AUDITORIA_2026-09-11.md](docs/AUDITORIA_2026-09-1
 - Justificativa obrigatória para exceder capacidade, concluir ou cancelar.
 - Notificações institucionais por e-mail, configuráveis.
 - Administração de usuários dentro do site.
+- Aba Administração para editar cadastros de juízes leigos: nome, e-mail, telefone, limite mensal de minutas, matérias, observações e status.
 - Auditoria de designações, atualizações e alterações de usuários.
 - Tutorial e visita guiada sob demanda.
 - Atualização automática a cada minuto, pausada durante edição ou com a página oculta.
@@ -34,6 +35,8 @@ As respostas originais do formulário permanecem na aba `Respostas ao formulári
 - `USUARIOS`: perfis, situação e último acesso.
 - `AUDITORIA`: alterações com usuário, data, valores anteriores e novos.
 - `GESTAO_SOLICITACOES`: prioridade, prazo e última atualização.
+
+Alterações no cadastro de juiz são gravadas na linha original da aba `Respostas ao formulário 1`, somente por `ADMIN`, com controle de versão para evitar sobrescrever uma edição mais recente e registro na aba `AUDITORIA`. Nome não pode ser alterado enquanto houver solicitações ativas designadas ao cadastro; status de encerramento também exige que essas solicitações sejam tratadas primeiro.
 
 Contas definidas em `ALLOWED_EMAILS` ou `ADMIN_EMAILS` são acessos fixos de recuperação e não podem ser desativadas pela interface.
 

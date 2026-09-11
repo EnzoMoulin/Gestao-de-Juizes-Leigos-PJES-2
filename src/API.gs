@@ -21,7 +21,7 @@ function apiBootstrap(token) {
     solicitacoes: dados.solicitacoes,
     juizes: dados.juizes,
     fonte: dados.fonte,
-    versao: "2026.09.11",
+    versao: "2026.09.11-admin-juizes",
     statusPermitidos: JL_CONFIG.STATUS,
     prioridadesPermitidas: JL_CONFIG.PRIORITIES,
     notificacoesAtivas: notificacoesAtivas_(),
@@ -68,6 +68,18 @@ function apiSalvarUsuario(token, dados) {
   const lock = LockService.getScriptLock();
   lock.waitLock(15000);
   try { return salvarUsuario_(usuario, dados || {}); } finally { lock.releaseLock(); }
+}
+
+function apiListarCadastrosJuizes(token) {
+  exigirSessao_(token, [JL_CONFIG.ROLES.ADMIN]);
+  return listarCadastrosJuizes_();
+}
+
+function apiSalvarJuiz(token, dados) {
+  const usuario = exigirSessao_(token, [JL_CONFIG.ROLES.ADMIN]);
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try { return salvarJuiz_(usuario, dados || {}); } finally { lock.releaseLock(); }
 }
 
 function verificarConfiguracao_() {

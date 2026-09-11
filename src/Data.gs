@@ -47,6 +47,36 @@ function statusFinal_(status) {
   return status === "Concluído" || status === "Cancelado";
 }
 
+function versaoJuiz_(linhaBruta, numeroLinha, linhaExibida) {
+  return hashToken_(JSON.stringify({ linha: linhaBruta, origem: numeroLinha, exibicao: linhaExibida }));
+}
+
+function exigirVersaoJuiz_(versaoEsperada, linhaBruta, numeroLinha, linhaExibida) {
+  if (!versaoEsperada || versaoEsperada !== versaoJuiz_(linhaBruta, numeroLinha, linhaExibida)) {
+    throw new Error("Este cadastro de juiz foi alterado ou a tela está desatualizada. Atualize os dados e confira as mudanças antes de salvar novamente.");
+  }
+}
+
+function cadastroJuizDaLinha_(linhaExibida, linhaBruta, mapa, numeroLinha) {
+  const capacidade = valor_(linhaExibida, mapa, "CAPACITY");
+  const status = statusNormalizado_(valor_(linhaExibida, mapa, "STATUS"));
+  return {
+    id: numeroLinha,
+    versao: versaoJuiz_(linhaBruta, numeroLinha, linhaExibida),
+    nome: valor_(linhaExibida, mapa, "NAME"),
+    email: normalizarEmail_(valor_(linhaExibida, mapa, "EMAIL")),
+    telefone: valor_(linhaExibida, mapa, "PHONE"),
+    capacidade: capacidade,
+    capacidadeNumerica: numeroQuantidade_(capacidade),
+    capacidadeValida: quantidadeInteira_(capacidade) !== null,
+    materias: valor_(linhaExibida, mapa, "SUBJECTS"),
+    observacoes: valor_(linhaExibida, mapa, "PRODUCTIVITY"),
+    status: status,
+    statusValido: JL_CONFIG.STATUS.includes(status),
+    ativo: !statusFinal_(status)
+  };
+}
+
 function solicitacaoDaLinha_(linhaExibida, linhaBruta, mapa, numeroLinha, metadados, gerente) {
   const status = statusNormalizado_(valor_(linhaExibida, mapa, "STATUS"));
   const criadoEm = valor_(linhaBruta, mapa, "TIMESTAMP");
@@ -112,19 +142,10 @@ function listarDados_(usuario) {
       todasSolicitacoes.push(solicitacaoDaLinha_(linha, linhasBrutas[indice], mapa, numeroLinha, metadados, gerente));
     }
     if (ehJuizLeigo_(linha, mapa) && !statusFinal_(statusNormalizado_(valor_(linha, mapa, "STATUS")))) {
-      const capacidade = numeroQuantidade_(valor_(linha, mapa, "CAPACITY"));
-      juizes.push({
-        id: numeroLinha,
-        nome: valor_(linha, mapa, "NAME"),
-        capacidade: valor_(linha, mapa, "CAPACITY"),
-        capacidadeNumerica: capacidade,
-        capacidadeValida: quantidadeInteira_(valor_(linha, mapa, "CAPACITY")) !== null,
-        statusValido: JL_CONFIG.STATUS.includes(statusNormalizado_(valor_(linha, mapa, "STATUS"))),
-        materias: valor_(linha, mapa, "SUBJECTS"),
-        observacoes: valor_(linha, mapa, "PRODUCTIVITY"),
-        email: normalizarEmail_(valor_(linha, mapa, "EMAIL")),
+      const cadastro = cadastroJuizDaLinha_(linha, linhasBrutas[indice], mapa, numeroLinha);
+      juizes.push(Object.assign(cadastro, {
         contato: gerente ? { email: valor_(linha, mapa, "EMAIL"), telefone: valor_(linha, mapa, "PHONE") } : null
-      });
+      }));
     }
   });
 
@@ -147,6 +168,7 @@ function listarDados_(usuario) {
     juiz.percentualOcupacao = juiz.capacidadeNumerica > 0 ? Math.min(100, Math.round(juiz.designadas / juiz.capacidadeNumerica * 100)) : 0;
     juiz.lotado = juiz.capacidadeValida && juiz.designadas >= juiz.capacidadeNumerica;
     delete juiz.email;
+    delete juiz.telefone;
   });
 
   const solicitacoes = gerente ? todasSolicitacoes : todasSolicitacoes.filter(item => item.email === normalizarEmail_(usuario.email));
@@ -167,6 +189,25 @@ function listarDados_(usuario) {
     ultimaLinha: aba.getLastRow()
   } : null;
   return { solicitacoes: solicitacoes, todasSolicitacoes: todasSolicitacoes, juizes: juizes, fonte: fonte };
+}
+
+function listarCadastrosJuizes_() {
+  const aba = obterFonte_();
+  const mapa = mapaCabecalhos_(aba);
+  const quantidadeLinhas = Math.max(aba.getLastRow() - 1, 0);
+  const linhasExibidas = quantidadeLinhas ? aba.getRange(2, 1, quantidadeLinhas, aba.getLastColumn()).getDisplayValues() : [];
+  const linhasBrutas = quantidadeLinhas ? aba.getRange(2, 1, quantidadeLinhas, aba.getLastColumn()).getValues() : [];
+  const cadastros = [];
+  linhasExibidas.forEach((linha, indice) => {
+    const numeroLinha = indice + 2;
+    if (!linha.some(valor => String(valor).trim()) || !ehJuizLeigo_(linha, mapa)) return;
+    cadastros.push(cadastroJuizDaLinha_(linha, linhasBrutas[indice], mapa, numeroLinha));
+  });
+  cadastros.forEach(cadastro => {
+    const chave = normalizarNome_(cadastro.nome);
+    cadastro.nomeDuplicado = cadastros.filter(item => normalizarNome_(item.nome) === chave && !statusFinal_(item.status)).length > 1;
+  });
+  return cadastros.sort((a, b) => String(a.nome).localeCompare(String(b.nome), "pt-BR"));
 }
 
 function escreverCampo_(aba, mapa, numeroLinha, chave, valor) {

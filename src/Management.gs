@@ -31,6 +31,69 @@ function exigirVersaoSolicitacao_(versaoEsperada, linha, numeroLinha, metadados,
   }
 }
 
+function textoCadastroJuiz_(valor, rotulo, limite, obrigatorio) {
+  const texto = String(valor == null ? "" : valor).trim();
+  if (obrigatorio && !texto) throw new Error("Informe " + rotulo + ".");
+  if (texto.length > limite) throw new Error(rotulo + " deve ter no máximo " + limite + " caracteres.");
+  return texto;
+}
+
+function salvarJuiz_(usuario, dados) {
+  const numeroLinha = Number(dados && dados.id);
+  const nome = textoCadastroJuiz_(dados && dados.nome, "o nome do juiz", 150, true);
+  const email = normalizarEmail_(dados && dados.email);
+  const telefone = textoCadastroJuiz_(dados && dados.telefone, "o telefone", 80, false);
+  const materias = textoCadastroJuiz_(dados && dados.materias, "as matérias", 1000, false);
+  const observacoes = textoCadastroJuiz_(dados && dados.observacoes, "as observações", 4000, false);
+  const status = String(dados && dados.status || "").trim();
+  const justificativa = textoCadastroJuiz_(dados && dados.justificativa, "a justificativa", 500, false);
+  const capacidade = quantidadeInteira_(dados && dados.capacidade);
+  if (!Number.isInteger(numeroLinha)) throw new Error("Cadastro de juiz inválido.");
+  if (capacidade === null) throw new Error("A quantidade limite deve ser um inteiro não negativo.");
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Informe um e-mail válido ou deixe o campo vazio.");
+  if (!JL_CONFIG.STATUS.includes(status)) throw new Error("Status do juiz inválido.");
+
+  const aba = obterFonte_();
+  const linha = validarLinha_(aba, numeroLinha);
+  const mapa = mapaCabecalhos_(aba);
+  const atual = aba.getRange(linha, 1, 1, aba.getLastColumn()).getDisplayValues()[0];
+  const atualBruta = aba.getRange(linha, 1, 1, aba.getLastColumn()).getValues()[0];
+  if (!ehJuizLeigo_(atual, mapa)) throw new Error("A linha selecionada não é um cadastro de juiz leigo.");
+  exigirVersaoJuiz_(dados && dados.versao, atualBruta, linha, atual);
+  const antesCadastro = cadastroJuizDaLinha_(atual, atualBruta, mapa, linha);
+  const nomeMudou = normalizarNome_(nome) !== normalizarNome_(antesCadastro.nome);
+  const ativasDoJuiz = listarDados_(usuario).todasSolicitacoes.filter(item => !statusFinal_(item.status) && normalizarNome_(item.juiz) === normalizarNome_(antesCadastro.nome));
+  if (nomeMudou && ativasDoJuiz.length) {
+    throw new Error("Não altere o nome enquanto houver " + ativasDoJuiz.length + " solicitação(ões) ativa(s) designada(s) a este juiz. Redesignar ou concluir as solicitações antes.");
+  }
+  if (statusFinal_(status) && !statusFinal_(antesCadastro.status) && ativasDoJuiz.length) {
+    throw new Error("Não encerre este cadastro enquanto houver " + ativasDoJuiz.length + " solicitação(ões) ativa(s) designada(s). Redesignar ou concluir as solicitações antes.");
+  }
+  if (statusFinal_(status) && status !== antesCadastro.status && justificativa.length < 5) {
+    throw new Error("Informe uma justificativa com pelo menos 5 caracteres ao encerrar o cadastro do juiz.");
+  }
+
+  const antes = {
+    nome: antesCadastro.nome, email: antesCadastro.email, telefone: antesCadastro.telefone,
+    capacidade: antesCadastro.capacidade, materias: antesCadastro.materias,
+    observacoes: antesCadastro.observacoes, status: antesCadastro.status
+  };
+  escreverCampo_(aba, mapa, linha, "NAME", textoCelulaSeguro_(nome));
+  escreverCampo_(aba, mapa, linha, "EMAIL", textoCelulaSeguro_(email));
+  escreverCampo_(aba, mapa, linha, "PHONE", textoCelulaSeguro_(telefone));
+  escreverCampo_(aba, mapa, linha, "CAPACITY", capacidade);
+  escreverCampo_(aba, mapa, linha, "SUBJECTS", textoCelulaSeguro_(materias));
+  escreverCampo_(aba, mapa, linha, "PRODUCTIVITY", textoCelulaSeguro_(observacoes));
+  escreverCampo_(aba, mapa, linha, "STATUS", status);
+  const depois = { nome: nome, email: email, telefone: telefone, capacidade: capacidade,
+    materias: materias, observacoes: observacoes, status: status, justificativa: justificativa };
+  registrarAuditoria_(usuario, "ATUALIZAR_JUIZ", linha, antes, depois);
+  SpreadsheetApp.flush();
+  const atualizado = aba.getRange(linha, 1, 1, aba.getLastColumn()).getDisplayValues()[0];
+  const atualizadoBruto = aba.getRange(linha, 1, 1, aba.getLastColumn()).getValues()[0];
+  return { ok: true, juiz: cadastroJuizDaLinha_(atualizado, atualizadoBruto, mapa, linha) };
+}
+
 function validarCapacidadeDesignacao_(dados, linha, nome, quantidade, justificativa, permitirExcesso) {
   const chave = normalizarNome_(nome);
   const candidatos = dados.juizes.filter(item => normalizarNome_(item.nome) === chave);

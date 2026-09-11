@@ -49,7 +49,7 @@
         <button class="tab active" type="button" data-tab="requests">Solicitações</button>
         <button class="tab" type="button" data-tab="judges">Juízes e capacidade</button>
         <button class="tab" type="button" data-tab="tutorial">Tutorial</button>
-        <button id="adminTab" class="tab" type="button" data-tab="admin" hidden>Usuários</button>
+        <button id="adminTab" class="tab" type="button" data-tab="admin" hidden>Administração</button>
       </nav>
 
       <section id="requestsPanel" class="tab-panel" tabindex="-1">
@@ -97,6 +97,11 @@
         <div class="section-heading"><div><p class="eyebrow">Administração</p><h2>Usuários e permissões</h2><p>Cadastre acessos adicionais e defina o nível de permissão.</p></div><button type="button" onclick="openUserDialog()">Adicionar usuário</button></div>
         <div class="notice subtle"><strong>Acessos fixos</strong><span>Contas configuradas em ALLOWED_EMAILS ou ADMIN_EMAILS não podem ser desativadas nesta tela.</span></div>
         <div class="table-wrap"><table><thead><tr><th>Usuário</th><th>Perfil</th><th>Situação</th><th>Último acesso</th><th></th></tr></thead><tbody id="usersTable"></tbody></table></div>
+        <section class="admin-subsection">
+          <div class="section-heading"><div><p class="eyebrow">Cadastros</p><h2>Juízes leigos</h2><p>Atualize a capacidade limite mensal, contatos, matérias, observações e situação do cadastro.</p></div><button class="secondary" type="button" onclick="loadJudgeRecords()">Atualizar cadastros</button></div>
+          <div class="filters admin-filter"><label for="adminJudgeSearch">Pesquisar cadastro de juiz</label><input id="adminJudgeSearch" type="search" placeholder="Nome, e-mail, matéria ou status"><span id="adminJudgeCount" role="status"></span></div>
+          <div class="table-wrap"><table><thead><tr><th>Juiz</th><th>Limite mensal</th><th>Status</th><th>Matérias</th><th>Observações</th><th>Situação</th><th></th></tr></thead><tbody id="adminJudgesTable"></tbody></table></div>
+        </section>
       </section>
     </main>
   </div>
@@ -126,6 +131,22 @@
     <form method="dialog">
       <div class="dialog-head"><div><p class="eyebrow">Administração</p><h2 id="userDialogTitle">Adicionar usuário</h2></div><button value="cancel" class="icon-button" aria-label="Fechar">×</button></div>
       <label>E-mail institucional<input id="userEmailInput" type="email" placeholder="usuario@tjes.jus.br"></label><label>Nome<input id="userNameInput" maxlength="150"></label><label>Perfil<select id="userRoleInput"><option value="CONSULTA">CONSULTA</option><option value="GESTOR">GESTOR</option><option value="ADMIN">ADMIN</option></select></label><label class="checkbox-label"><input id="userActiveInput" type="checkbox" checked> Usuário ativo</label><p id="userError" class="error" role="alert"></p><div class="dialog-actions"><button value="cancel" class="secondary">Cancelar</button><button id="saveUserButton" type="button">Salvar usuário</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="judgeDialog" class="wide-dialog" aria-labelledby="judgeDialogTitle">
+    <form method="dialog" id="judgeForm">
+      <div class="dialog-head"><div><p class="eyebrow">Administração</p><h2 id="judgeDialogTitle">Editar cadastro de juiz</h2></div><button value="cancel" class="icon-button" aria-label="Fechar">×</button></div>
+      <p class="dialog-summary">A alteração é gravada na linha original da resposta e registrada na aba AUDITORIA.</p>
+      <input type="hidden" id="judgeIdInput"><input type="hidden" id="judgeVersionInput">
+      <div class="two-columns"><label>Nome<input id="judgeNameInput" maxlength="150" required></label><label>E-mail<input id="judgeEmailInput" type="email" maxlength="150"></label></div>
+      <div class="two-columns"><label>Telefone<input id="judgePhoneInput" maxlength="80"></label><label>Quantidade limite mensal de minutas<input id="judgeCapacityInput" type="number" min="0" step="1" required></label></div>
+      <label>Preferência por matérias<textarea id="judgeSubjectsInput" rows="3" maxlength="1000"></textarea></label>
+      <label>Observações sobre atuação e produtividade<textarea id="judgeProductivityInput" rows="4" maxlength="4000"></textarea></label>
+      <label>Status<select id="judgeStatusInput"></select></label>
+      <label>Justificativa da alteração (obrigatória ao encerrar)<textarea id="judgeReasonInput" rows="3" maxlength="500" placeholder="Explique a alteração quando necessário."></textarea></label>
+      <p id="judgeError" class="error" role="alert"></p>
+      <div class="dialog-actions"><button value="cancel" class="secondary">Cancelar</button><button id="saveJudgeButton" type="button">Salvar cadastro</button></div>
     </form>
   </dialog>
 
