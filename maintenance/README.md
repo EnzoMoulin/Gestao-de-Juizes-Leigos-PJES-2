@@ -13,3 +13,7 @@ Use esta alternativa quando o comando privado não aparecer no seletor do editor
 Esta separação permite usar a identidade executora para manutenção sem disponibilizar uma função com os privilégios do proprietário aos visitantes do Web App. Não renomeie o comando privado do projeto do site para torná-lo público.
 
 Testes locais: node tests/maintenance.js. Não houve execução na planilha real.
+
+## Conferência do formulário
+
+Copie também `ConferirFormulario.gs` neste projeto separado para executar `diagnosticarFormulario`, `conferirQuantidadesFormulario` e, quando houver respostas recuperáveis, `recuperarQuantidadesFormulario`. Veja [diagnóstico e sequência completa](../docs/AJUSTES_2026-09-15.md). As funções validam a conta executora, não enviam formulários e não criam respostas.

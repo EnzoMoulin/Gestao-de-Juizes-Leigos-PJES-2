@@ -80,7 +80,7 @@ assert.match(indexHtml, /id="editQuantity"/);
 assert.match(indexHtml, /<output id="editQuantity"/);
 assert.doesNotMatch(indexHtml, /<input[^>]*id="editQuantity"/);
 assert.match(indexHtml, /id="detailsDialog"/);
-assert.match(indexHtml, /Designar juiz e iniciar atendimento/);
+assert.match(indexHtml, /Designar Juiz Leigo e iniciar atendimento/);
 assert.match(appHtml, /exportRequests/);
 assert.match(appHtml, /apiHistoricoSolicitacao/);
 assert.match(appHtml, /apiSalvarUsuario/);

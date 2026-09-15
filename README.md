@@ -2,6 +2,10 @@
 
 Aplicativo institucional em Google Apps Script para acompanhar solicitações, disponibilidade e capacidade de juízes leigos. A aplicação lê a planilha de respostas do formulário, mantém dados de gestão em abas auxiliares e registra todas as alterações administrativas.
 
+## Ajustes de 15 de setembro de 2026
+
+Observações opcionais, filtros iniciais Pendente/Mais antigas, data de envio dos cadastros e documento de designação para impressão/PDF. Diagnóstico do formulário e recuperação de respostas reais no projeto de manutenção: [instruções de atualização](docs/AJUSTES_2026-09-15.md).
+
 ## Candidata de 11 de setembro de 2026
 
 Auditoria e mudanças em [docs/AUDITORIA_2026-09-11.md](docs/AUDITORIA_2026-09-11.md). Esta candidata adiciona controle de versão nas gravações, validação de capacidade na reabertura, inteiros sem ambiguidade, lista compacta, paginação e relatório para impressão. Homologação visual e no Workspace ainda são necessárias. Atualize cliente e servidor juntos.
@@ -20,7 +24,7 @@ A quantidade agora vem exclusivamente da pergunta **“Quantas minutas estão se
 - Prioridade (`Normal`, `Alta`, `Urgente`) e prazo por solicitação.
 - Designação e redesignação de juiz com confirmação.
 - Cálculo de carga, saldo e percentual de ocupação dos juízes.
-- Justificativa obrigatória para exceder capacidade, concluir ou cancelar.
+- Justificativa obrigatória para exceder capacidade; observações de andamento opcionais.
 - Notificações institucionais por e-mail, configuráveis.
 - Administração de usuários dentro do site.
 - Aba Administração para editar cadastros de juízes leigos: nome, e-mail, telefone, limite mensal de minutas, matérias, observações e status.
@@ -80,8 +84,8 @@ clasp push
 No editor do Apps Script:
 
 1. Configure primeiro `ALLOWED_EMAILS` e `ADMIN_EMAILS` nas propriedades do script.
-2. Salve o projeto. No menu de funções do editor, selecione `prepararProjetoNoEditor_` (com o `_` final), clique em Executar e autorize com a conta institucional configurada em `ADMIN_EMAILS`.
-3. Esse comando instala as abas auxiliares e verifica a configuração. Confira as mensagens no Registro de execução. Ele usa a conta executora do editor e não pode ser chamado pelo site. Se não aparecer no seletor, abra `API.gs`, confira se o código foi copiado por completo, salve e recarregue o editor.
+2. Para preparar as abas, use o projeto separado de manutenção e execute `prepararPlanilha`, conforme [maintenance/README.md](maintenance/README.md). Essa é a alternativa quando `prepararProjetoNoEditor_` não aparece no seletor.
+3. Confira as mensagens no Registro de execução. Não altere a identidade do site para usar a conta executora. A rotina de manutenção fica em projeto separado e não deve ser publicada como Web App.
 
 Os comandos públicos antigos continuam exigindo a identidade ativa; não substitua essa verificação por `getEffectiveUser()` no login ou em endpoints públicos, pois no Web App essa conta pode ser a do proprietário.
 
@@ -111,7 +115,7 @@ Após esta atualização, uma nova autorização será solicitada porque o aplic
 3. Consulte a capacidade dos juízes.
 4. Faça a designação; o status muda para `Em atendimento`.
 5. Registre o andamento nas observações.
-6. Marque como `Concluído` ou `Cancelado` com uma justificativa.
+6. Marque como `Concluído` ou `Cancelado`; observações são opcionais.
 7. Consulte o histórico para verificar todas as alterações.
 
 ## Observações

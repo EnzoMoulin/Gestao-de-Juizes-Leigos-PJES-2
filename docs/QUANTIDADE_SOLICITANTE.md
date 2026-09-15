@@ -51,7 +51,7 @@ O bloqueio é do aplicativo. Ele não retira permissões de quem já pode editar
 2. Nova solicitação de assessor com 5 minutas: aparece com quantidade 5; vazio, zero, negativos, decimais e texto devem ser recusados no Forms.
 3. Cadastro de juiz com capacidade 20: não exige quantidade solicitada. O ADMIN consegue mudar a capacidade.
 4. Designe os pedidos de 3 e 5 ao juiz de capacidade 20: carga 8 e saldo 12. Conclua o pedido de 3: carga 5 e saldo 15.
-5. Abra um pedido antigo sem quantidade: a designação deve ser bloqueada, mas cancelar com justificativa deve funcionar.
+5. Abra um pedido antigo sem quantidade: a designação deve ser bloqueada, mas cancelar, inclusive sem observações, deve funcionar.
 6. Após uma alteração da resposta original pelo solicitante, uma tela de edição já aberta deve exigir atualização. Uma resposta editada pode mudar a carga de um pedido já ativo; confira o novo saldo e eventuais excessos.
 
 Os testes automatizados usam dados simulados. Não substituem esta homologação no formulário e na implantação reais.

@@ -40,14 +40,14 @@
 
       <div class="sync-controls"><label class="checkbox-label"><input id="autoRefresh" type="checkbox" checked> Atualizar automaticamente a cada minuto</label><span>Atualização pausada durante a edição.</span></div>
       <p id="refreshStatus" class="error" role="alert" hidden></p>
-      <details id="sourceDetails" class="source-details" hidden><summary>Fonte dos dados · de onde vêm as respostas?</summary><p id="sourceName"></p><p id="sourceCounts"></p><small id="sourceId"></small><p><a id="sourceLink" target="_blank" rel="noopener noreferrer">Abrir planilha de origem</a></p><p id="sourceWarnings" class="error" role="status"></p><p>Uma resposta de juiz leigo aparece em <strong>Juízes e capacidade</strong>. Respostas de magistrados e assessores aparecem em <strong>Solicitações</strong>. A capacidade mensal pertence ao cadastro do juiz; a quantidade de minutas de cada solicitação é informada pelo solicitante no formulário e não pode ser alterada pela administração. O formulário original e sua cópia não são mesclados automaticamente.</p></details>
-      <section id="managementNotice" class="notice" hidden><strong>Acesso de gestão ativo</strong><span>Você pode definir prioridades, prazos, designar juízes e atualizar o andamento.</span></section>
+      <details id="sourceDetails" class="source-details" hidden><summary>Fonte dos dados · de onde vêm as respostas?</summary><p id="sourceName"></p><p id="sourceCounts"></p><small id="sourceId"></small><p><a id="sourceLink" target="_blank" rel="noopener noreferrer">Abrir planilha de origem</a></p><p id="sourceWarnings" class="error" role="status"></p><p>Uma resposta de juiz leigo aparece em <strong>Juízes Leigos e capacidade</strong>. Respostas de magistrados e assessores aparecem em <strong>Solicitações</strong>. A capacidade mensal pertence ao cadastro do juiz; a quantidade de minutas de cada solicitação é informada pelo solicitante no formulário e não pode ser alterada pela administração. O formulário original e sua cópia não são mesclados automaticamente.</p></details>
+      <section id="managementNotice" class="notice" hidden><strong>Acesso de gestão ativo</strong><span>Você pode definir prioridades, prazos, designar Juízes Leigos e atualizar o andamento.</span></section>
       <section id="operationalAlerts" class="alerts" aria-label="Alertas operacionais"></section>
       <section id="metrics" class="metrics" aria-label="Indicadores"></section>
 
       <nav class="tabs" aria-label="Seções">
         <button class="tab active" type="button" data-tab="requests">Solicitações</button>
-        <button class="tab" type="button" data-tab="judges">Juízes e capacidade</button>
+        <button class="tab" type="button" data-tab="judges">Juízes Leigos e capacidade</button>
         <button class="tab" type="button" data-tab="tutorial">Tutorial</button>
         <button id="adminTab" class="tab" type="button" data-tab="admin" hidden>Administração</button>
       </nav>
@@ -55,13 +55,13 @@
       <section id="requestsPanel" class="tab-panel" tabindex="-1">
         <div class="section-heading"><div><h2>Solicitações</h2><p>Localize, priorize e acompanhe os pedidos recebidos.</p></div><div class="section-actions"><button class="secondary" type="button" onclick="printRequests()">Imprimir relatório</button><button class="secondary" type="button" onclick="exportRequests()">Exportar CSV</button></div></div>
         <div class="filters" aria-label="Filtros de solicitações">
-          <div class="search-row"><label class="sr-only" for="search">Pesquisar</label><input id="search" type="search" placeholder="Buscar por unidade, solicitante, processo, juiz ou status"></div>
+          <div class="search-row"><label class="sr-only" for="search">Pesquisar</label><input id="search" type="search" placeholder="Buscar por unidade, solicitante, processo, Juiz Leigo ou status"></div>
           <div class="filter-grid">
             <label>Status<select id="statusFilter"><option value="">Todos</option></select></label>
             <label>Prioridade<select id="priorityFilter"><option value="">Todas</option></select></label>
             <label>Juiz Leigo<select id="judgeFilter"><option value="">Todos</option></select></label>
             <label>Unidade<select id="unitFilter"><option value="">Todas</option></select></label>
-            <label>Situação<select id="flagFilter"><option value="">Todas</option><option value="unassigned">Sem juiz</option><option value="overdue">Atrasadas</option><option value="upcoming">Prazo nos próximos 7 dias</option><option value="old">Há 7 dias ou mais</option></select></label>
+            <label>Situação<select id="flagFilter"><option value="">Todas</option><option value="unassigned">Sem Juiz Leigo</option><option value="overdue">Atrasadas</option><option value="upcoming">Prazo nos próximos 7 dias</option><option value="old">Há 7 dias ou mais</option></select></label>
             <label>Ordenar<select id="sortFilter"><option value="priority">Prioridade</option><option value="oldest">Mais antigas</option><option value="newest">Mais recentes</option><option value="deadline">Prazo mais próximo</option></select></label>
           </div>
           <div class="filter-footer"><span id="resultCount" role="status" aria-live="polite"></span><button class="text-button" type="button" onclick="clearFilters()">Limpar filtros</button></div>
@@ -72,8 +72,8 @@
       </section>
 
       <section id="judgesPanel" class="tab-panel" hidden>
-        <div class="section-heading"><div><h2>Juízes e capacidade</h2><p>A ocupação considera a quantidade de minutas das solicitações ativas designadas.</p></div></div>
-        <label for="judgeSearch">Buscar juiz, matéria ou observação</label><input id="judgeSearch" type="search" placeholder="Digite um nome ou matéria"><p id="judgeCount" role="status"></p>
+        <div class="section-heading"><div><h2>Juízes Leigos e capacidade</h2><p>A ocupação considera a quantidade de minutas das solicitações ativas designadas.</p></div></div>
+        <label for="judgeSearch">Buscar Juiz Leigo, matéria ou observação</label><input id="judgeSearch" type="search" placeholder="Digite um nome ou matéria"><p id="judgeCount" role="status"></p>
         <p id="capacityWarning" class="notice" role="status" hidden></p>
         <div id="judges" class="cards judge-grid"></div>
       </section>
@@ -83,12 +83,12 @@
         <div class="tutorial-grid">
           <article class="tutorial-card"><span class="step-number">1</span><h3>Localize e analise</h3><p>Use os filtros, abra <strong>Ver detalhes</strong> e confira processos, orientações, quantidade e preferência.</p></article>
           <article class="tutorial-card"><span class="step-number">2</span><h3>Defina prioridade e prazo</h3><p>Em <strong>Gerenciar</strong>, escolha Normal, Alta ou Urgente e informe a data limite do atendimento.</p></article>
-          <article class="tutorial-card"><span class="step-number">3</span><h3>Confira a capacidade</h3><p>Na aba de juízes, consulte carga utilizada e saldo. O sistema alerta antes de exceder a capacidade.</p></article>
-          <article class="tutorial-card"><span class="step-number">4</span><h3>Faça a designação</h3><p>Escolha o juiz e clique em <strong>Designar juiz e iniciar atendimento</strong>. O status muda para Em atendimento.</p></article>
-          <article class="tutorial-card"><span class="step-number">5</span><h3>Atualize o andamento</h3><p>Registre observações e altere o status. Para concluir ou cancelar, uma justificativa é obrigatória.</p></article>
+          <article class="tutorial-card"><span class="step-number">3</span><h3>Confira a capacidade</h3><p>Na aba de Juízes Leigos, consulte carga utilizada e saldo. O sistema alerta antes de exceder a capacidade.</p></article>
+          <article class="tutorial-card"><span class="step-number">4</span><h3>Faça a designação</h3><p>Escolha o Juiz Leigo e clique em <strong>Designar Juiz Leigo e iniciar atendimento</strong>. O status muda para Em atendimento.</p></article>
+          <article class="tutorial-card"><span class="step-number">5</span><h3>Atualize o andamento</h3><p>Registre observações e altere o status. As observações são opcionais, inclusive ao concluir ou cancelar.</p></article>
           <article class="tutorial-card"><span class="step-number">6</span><h3>Acompanhe o histórico</h3><p>Em <strong>Ver detalhes</strong>, consulte quem realizou cada alteração, quando e quais valores foram modificados.</p></article>
         </div>
-        <section class="help-section"><h3>Enviei o formulário e não apareceu. O que conferir?</h3><ol><li>Abra a aba correta: respostas de juiz leigo são cadastros de disponibilidade, não pedidos de magistrados/assessores.</li><li>Clique em Atualizar dados e limpe os filtros. A atualização automática ocorre a cada minuto, fora das telas de edição.</li><li>Gestores podem abrir “Fonte dos dados” e conferir a planilha e a aba realmente lidas.</li><li>No Google Forms, abra Respostas e o atalho da planilha. Compare o ID dessa planilha com o mostrado no site. Uma cópia pode usar outra planilha.</li><li>Confira avisos de função/status não reconhecidos. Juízes com status Concluído ou Cancelado não aparecem como ativos.</li><li>Se a origem estiver errada, peça ao administrador para ajustar SPREADSHEET_ID e, se necessário, SOURCE_SHEET nas propriedades do Apps Script. Não exclua nem reordene linhas da origem.</li></ol></section>
+        <section class="help-section"><h3>Enviei o formulário e não apareceu. O que conferir?</h3><ol><li>Abra a aba correta: respostas de juiz leigo são cadastros de disponibilidade, não pedidos de magistrados/assessores.</li><li>Clique em Atualizar dados e limpe os filtros. A atualização automática ocorre a cada minuto, fora das telas de edição.</li><li>Gestores podem abrir “Fonte dos dados” e conferir a planilha e a aba realmente lidas.</li><li>No Google Forms, abra Respostas e o atalho da planilha. Compare o ID dessa planilha com o mostrado no site. Uma cópia pode usar outra planilha.</li><li>Confira avisos de função/status não reconhecidos. Juízes Leigos com status Concluído ou Cancelado não aparecem como ativos.</li><li>Se a origem estiver errada, peça ao administrador para ajustar SPREADSHEET_ID e, se necessário, SOURCE_SHEET nas propriedades do Apps Script. Não exclua nem reordene linhas da origem.</li></ol></section>
         <section class="help-section"><h3>Significado dos status</h3><div class="status-guide"><div><span class="badge status-pendente">Pendente</span><p>Recebida e aguardando início.</p></div><div><span class="badge status-em-atendimento">Em atendimento</span><p>Designada ou em execução.</p></div><div><span class="badge status-concluido">Concluído</span><p>Atendimento finalizado.</p></div><div><span class="badge status-cancelado">Cancelado</span><p>Pedido encerrado sem atendimento.</p></div></div></section>
         <section class="help-section"><h3>Regras importantes</h3><ul><li>Designar e salvar andamento são ações diferentes.</li><li>Uma redesignação fica registrada no histórico.</li><li>Exceder a capacidade exige confirmação e justificativa.</li><li>Notificações por e-mail dependem da propriedade <strong>SEND_NOTIFICATIONS</strong>.</li><li>O botão Atualizar dados relê a planilha.</li></ul></section>
       </section>
@@ -98,9 +98,9 @@
         <div class="notice subtle"><strong>Acessos fixos</strong><span>Contas configuradas em ALLOWED_EMAILS ou ADMIN_EMAILS não podem ser desativadas nesta tela.</span></div>
         <div class="table-wrap"><table><thead><tr><th>Usuário</th><th>Perfil</th><th>Situação</th><th>Último acesso</th><th></th></tr></thead><tbody id="usersTable"></tbody></table></div>
         <section class="admin-subsection">
-          <div class="section-heading"><div><p class="eyebrow">Cadastros</p><h2>Juízes leigos</h2><p>Atualize a capacidade limite mensal, contatos, matérias, observações e situação do cadastro.</p></div><button class="secondary" type="button" onclick="loadJudgeRecords()">Atualizar cadastros</button></div>
-          <div class="filters admin-filter"><label for="adminJudgeSearch">Pesquisar cadastro de juiz</label><input id="adminJudgeSearch" type="search" placeholder="Nome, e-mail, matéria ou status"><span id="adminJudgeCount" role="status"></span></div>
-          <div class="table-wrap"><table><thead><tr><th>Juiz</th><th>Limite mensal</th><th>Status</th><th>Matérias</th><th>Observações</th><th>Situação</th><th></th></tr></thead><tbody id="adminJudgesTable"></tbody></table></div>
+          <div class="section-heading"><div><p class="eyebrow">Cadastros</p><h2>Juízes Leigos</h2><p>Atualize a capacidade limite mensal, contatos, matérias, observações e situação do cadastro.</p></div><button class="secondary" type="button" onclick="loadJudgeRecords()">Atualizar cadastros</button></div>
+          <div class="filters admin-filter"><label for="adminJudgeSearch">Pesquisar cadastro de Juiz Leigo</label><input id="adminJudgeSearch" type="search" placeholder="Nome, e-mail, matéria ou status"><span id="adminJudgeCount" role="status"></span></div>
+          <div class="table-wrap"><table><thead><tr><th>Juiz Leigo</th><th>Limite mensal</th><th>Status</th><th>Matérias</th><th>Observações</th><th>Situação</th><th></th></tr></thead><tbody id="adminJudgesTable"></tbody></table></div>
         </section>
       </section>
     </main>
@@ -112,7 +112,7 @@
       <div id="detailStatusRow" class="detail-status-row"></div>
       <div id="detailGrid" class="detail-grid"></div>
       <section class="history-section"><div class="section-heading compact"><div><h3>Histórico de alterações</h3><p>Registro cronológico das ações administrativas.</p></div></div><div id="historyList" class="history-list"></div></section>
-      <div class="dialog-actions"><button value="cancel" class="secondary">Fechar</button><button id="detailsManageButton" type="button">Gerenciar solicitação</button></div>
+      <div class="dialog-actions"><button value="cancel" class="secondary">Fechar</button><button id="designationDocumentButton" type="button" class="secondary" hidden>Documento de designação</button><button id="detailsManageButton" type="button">Gerenciar solicitação</button></div>
     </form>
   </dialog>
 
@@ -121,8 +121,8 @@
       <div class="dialog-head"><div><p class="eyebrow">Solicitação <span id="editRequestRef"></span></p><h2 id="editTitle">Gerenciar solicitação</h2></div><button value="cancel" class="icon-button" aria-label="Fechar">×</button></div>
       <p id="editRequestSummary" class="dialog-summary"></p><input type="hidden" id="editId">
       <section class="dialog-section"><div class="action-heading"><span class="step-number">1</span><div><h3>Quantidade, prioridade e prazo</h3><p>Consulte o volume informado pelo solicitante e organize a fila.</p></div></div><div class="two-columns"><label>Minutas solicitadas<output id="editQuantity" aria-live="polite"></output><small class="help-text">Informada pelo solicitante no formulário. A administração não pode alterá-la. Correções devem ser feitas pelo solicitante.</small></label><label>Prioridade<select id="editPriority"></select></label></div><label>Prazo<input id="editDeadline" type="date"></label></section>
-      <section class="dialog-section"><div class="action-heading"><span class="step-number">2</span><div><h3>Designar juiz</h3><p>Escolha quem atenderá esta solicitação.</p></div></div><label>Juíza ou juiz leigo<select id="editJudge"><option value="">Selecione uma pessoa</option></select></label><div id="assignmentCapacity" class="capacity-preview"></div><div id="overCapacityFields" hidden><label>Justificativa para exceder a capacidade<textarea id="assignmentReason" rows="3" maxlength="500"></textarea></label></div><p class="help-text">A confirmação registra o juiz e a data e muda o status para “Em atendimento”.</p><button type="button" id="assignButton">Designar juiz e iniciar atendimento</button></section>
-      <section class="dialog-section"><div class="action-heading"><span class="step-number">3</span><div><h3>Atualizar andamento</h3><p>Altere o status, a quantidade, as observações, a prioridade e o prazo.</p></div></div><label>Status<select id="editStatus"></select></label><div id="reopenCapacity" class="capacity-preview" hidden></div><div id="reopenFields" hidden><label>Justificativa de excesso ao reabrir<textarea id="reopenReason" rows="3" maxlength="500"></textarea></label><label class="checkbox-label"><input id="reopenConfirm" type="checkbox"> Confirmo a reabertura acima da capacidade</label></div><label>Observações<textarea id="editNotes" rows="5" maxlength="4000" placeholder="Descreva o andamento ou a justificativa para conclusão/cancelamento."></textarea></label><button type="button" id="saveButton">Salvar andamento, quantidade, prioridade e prazo</button></section>
+      <section class="dialog-section"><div class="action-heading"><span class="step-number">2</span><div><h3>Designar Juiz Leigo</h3><p>Escolha quem atenderá esta solicitação.</p></div></div><label>Juíza ou juiz leigo<select id="editJudge"><option value="">Selecione uma pessoa</option></select></label><div id="assignmentCapacity" class="capacity-preview"></div><div id="overCapacityFields" hidden><label>Justificativa para exceder a capacidade<textarea id="assignmentReason" rows="3" maxlength="500"></textarea></label></div><p class="help-text">A confirmação registra o Juiz Leigo e a data e muda o status para “Em atendimento”.</p><button type="button" id="assignButton">Designar Juiz Leigo e iniciar atendimento</button></section>
+      <section class="dialog-section"><div class="action-heading"><span class="step-number">3</span><div><h3>Atualizar andamento</h3><p>Altere o status, as observações, a prioridade e o prazo.</p></div></div><label>Status<select id="editStatus"></select></label><div id="reopenCapacity" class="capacity-preview" hidden></div><div id="reopenFields" hidden><label>Justificativa de excesso ao reabrir<textarea id="reopenReason" rows="3" maxlength="500"></textarea></label><label class="checkbox-label"><input id="reopenConfirm" type="checkbox"> Confirmo a reabertura acima da capacidade</label></div><label>Observações (opcional)<textarea id="editNotes" rows="5" maxlength="4000" placeholder="Se desejar, acrescente informações sobre o andamento."></textarea></label><button type="button" id="saveButton">Salvar andamento, prioridade e prazo</button></section>
       <p id="editError" class="error" role="alert"></p><p class="help-text">Se houver conflito, copie suas observações antes de fechar. Atualize os dados e confira a versão mais recente.</p><div class="dialog-actions"><button value="cancel" class="secondary">Fechar sem alterar</button></div>
     </form>
   </dialog>
@@ -136,7 +136,7 @@
 
   <dialog id="judgeDialog" class="wide-dialog" aria-labelledby="judgeDialogTitle">
     <form method="dialog" id="judgeForm">
-      <div class="dialog-head"><div><p class="eyebrow">Administração</p><h2 id="judgeDialogTitle">Editar cadastro de juiz</h2></div><button value="cancel" class="icon-button" aria-label="Fechar">×</button></div>
+      <div class="dialog-head"><div><p class="eyebrow">Administração</p><h2 id="judgeDialogTitle">Editar cadastro de Juiz Leigo</h2></div><button value="cancel" class="icon-button" aria-label="Fechar">×</button></div>
       <p class="dialog-summary">A alteração é gravada na linha original da resposta e registrada na aba AUDITORIA.</p>
       <input type="hidden" id="judgeIdInput"><input type="hidden" id="judgeVersionInput">
       <div class="two-columns"><label>Nome<input id="judgeNameInput" maxlength="150" required></label><label>E-mail<input id="judgeEmailInput" type="email" maxlength="150"></label></div>

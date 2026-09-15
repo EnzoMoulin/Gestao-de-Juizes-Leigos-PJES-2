@@ -63,6 +63,8 @@ function cadastroJuizDaLinha_(linhaExibida, linhaBruta, mapa, numeroLinha) {
   return {
     id: numeroLinha,
     versao: versaoJuiz_(linhaBruta, numeroLinha, linhaExibida),
+    data: valor_(linhaExibida, mapa, "TIMESTAMP"),
+    dataIso: valor_(linhaBruta, mapa, "TIMESTAMP") instanceof Date ? valor_(linhaBruta, mapa, "TIMESTAMP").toISOString() : "",
     nome: valor_(linhaExibida, mapa, "NAME"),
     email: normalizarEmail_(valor_(linhaExibida, mapa, "EMAIL")),
     telefone: valor_(linhaExibida, mapa, "PHONE"),
@@ -290,7 +292,6 @@ function atualizarSolicitacao_(usuario, numeroLinha, status, observacoes, priori
   if (!JL_CONFIG.STATUS.includes(novoStatus)) throw new Error("Status inválido.");
   const notas = String(observacoes || "").trim();
   if (notas.length > 4000) throw new Error("As observações devem ter no máximo 4.000 caracteres.");
-  if (statusFinal_(novoStatus) && notas.length < 5) throw new Error("Informe uma observação ao concluir ou cancelar uma solicitação.");
   const lock = LockService.getScriptLock();
   lock.waitLock(15000);
   try {
