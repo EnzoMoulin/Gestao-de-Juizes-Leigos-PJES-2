@@ -1,3 +1,8 @@
+// ███████████████████████████████████████████████████████████████████████████
+// NÃO COPIE ESTE ARQUIVO PARA O APPS SCRIPT.
+// Teste Node.js (usa require/vm/crypto). No projeto do site, copie SOMENTE src/.
+// Se este arquivo foi colado no editor como .gs, APAGUE-O de lá.
+// ███████████████████████████████████████████████████████████████████████████
 // Regressão do relato real (set/2026): a aba de respostas possui apenas a coluna
 // de capacidade do juiz ("Número de minutas em que necessita trabalhar no mês
 // atual:") e NÃO possui "Quantas minutas estão sendo solicitadas?". O site deve
